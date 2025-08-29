@@ -7,6 +7,7 @@ import BlogList from "@/Components/BlogList";
 import ContactForm from "@/Components/ContactForm";
 import Footer from "@/Components/Footer";
 import Header from "@/Components/Header";
+import LawyersSection from "@/Components/LawyersSection"; // Add this import
 import { ToastContainer } from "react-toastify";
 
 export default function Home() {
@@ -15,8 +16,9 @@ export default function Home() {
       <ToastContainer theme="dark"/>
       <Header/>
       <HeroSection/>
-      <AboutSection/>
-        <ServicesSection/>
+      <LawyersSection/> {/* Add Lawyers Section */}
+            <AboutSection/>
+      <ServicesSection/>
       <BlogList/>
       <ContactForm/>
       <Footer/>

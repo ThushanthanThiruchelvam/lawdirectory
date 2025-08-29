@@ -20,6 +20,11 @@ const Sidebar = () => {
       name: 'Profile',
       icon: assets.profile_icon
     },
+        {
+      path: '/admin/lawyers',
+      name: 'Lawyers',
+      icon: assets.add_icon // You'll need to add this icon to your assets
+    },
     // Add to your menuItems array in Sidebar component
 {
   path: '/admin/services',
