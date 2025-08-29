@@ -10,32 +10,142 @@ const connectToDB = async () => {
   }
 };
 
-// GET all lawyers or single lawyer by slug
+// GET all lawyers or single lawyer by slug or ID
 export async function GET(request) {
   try {
     await connectToDB();
     
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get('slug');
+    const lawyerId = searchParams.get('id');
     const featured = searchParams.get('featured');
     const admin = searchParams.get('admin');
+    const lang = searchParams.get('lang') || 'en';
+    const strict = searchParams.get('strict') === 'true'; // Add strict mode parameter
     
-    if (slug) {
-      // Get single lawyer by slug
-      const lawyer = await LawyerModel.findOne({ slug, isPublished: true });
+    // Get single lawyer by ID for admin
+    if (lawyerId && admin === 'true') {
+      const lawyer = await LawyerModel.findOne({ lawyerId });
+      
       if (!lawyer) {
         return NextResponse.json(
           { success: false, error: "Lawyer not found" },
           { status: 404 }
         );
       }
-      return NextResponse.json({ lawyer });
+      
+      // Extract content for response
+      const englishContent = lawyer.contents.find(c => c.language === 'en') || lawyer.contents[0];
+      const tamilContent = lawyer.contents.find(c => c.language === 'ta');
+      
+      const lawyerResponse = {
+        _id: lawyer._id,
+        lawyerId: lawyer.lawyerId,
+        name_en: englishContent?.name || "",
+        title_en: englishContent?.title || "",
+        description_en: englishContent?.description || "",
+        name_ta: tamilContent?.name || "",
+        title_ta: tamilContent?.title || "",
+        description_ta: tamilContent?.description || "",
+        locations_en: lawyer.locations.filter(l => l.language === 'en').map(l => l.location),
+        locations_ta: lawyer.locations.filter(l => l.language === 'ta').map(l => l.location),
+        practiceAreas_en: lawyer.practiceAreas.filter(p => p.language === 'en').map(p => p.practiceArea),
+        practiceAreas_ta: lawyer.practiceAreas.filter(p => p.language === 'ta').map(p => p.practiceArea),
+        education_en: lawyer.education.filter(e => e.language === 'en').map(e => e.education),
+        education_ta: lawyer.education.filter(e => e.language === 'ta').map(e => e.education),
+        addresses_en: lawyer.addresses.filter(a => a.language === 'en').map(a => a.address),
+        addresses_ta: lawyer.addresses.filter(a => a.language === 'ta').map(a => a.address),
+        contactNumber: lawyer.contactNumber,
+        email: lawyer.email,
+        website: lawyer.website,
+        image: lawyer.image,
+        isFeatured: lawyer.isFeatured,
+        isPublished: lawyer.isPublished
+      };
+      
+      return NextResponse.json({ lawyer: lawyerResponse });
+    }
+    
+    if (slug) {
+      // Get single lawyer by slug with language-specific content
+      const lawyer = await LawyerModel.findOne({ 
+        slug, 
+        isPublished: admin !== 'true' ? true : { $exists: true } 
+      });
+      
+      if (!lawyer) {
+        return NextResponse.json(
+          { success: false, error: "Lawyer not found" },
+          { status: 404 }
+        );
+      }
+      
+      // Extract content in requested language - FIXED: Only show requested language content
+      const content = lawyer.contents.find(c => c.language === lang);
+      
+      // For arrays, filter by the requested language only - FIXED: No fallback to English
+      const locations = lawyer.locations
+        .filter(l => l.language === lang)
+        .map(l => l.location);
+      
+      const practiceAreas = lawyer.practiceAreas
+        .filter(p => p.language === lang)
+        .map(p => p.practiceArea);
+      
+      const education = lawyer.education
+        .filter(e => e.language === lang)
+        .map(e => e.education);
+      
+      const addresses = lawyer.addresses
+        .filter(a => a.language === lang)
+        .map(a => a.address);
+      
+      return NextResponse.json({ 
+        lawyer: {
+          _id: lawyer._id,
+          lawyerId: lawyer.lawyerId,
+          slug: lawyer.slug,
+          name: content?.name || "No name available",
+          title: content?.title || "No title available",
+          description: content?.description || "",
+          locations,
+          practiceAreas,
+          education,
+          addresses,
+          contactNumber: lawyer.contactNumber,
+          email: lawyer.email,
+          website: lawyer.website,
+          image: lawyer.image,
+          isFeatured: lawyer.isFeatured,
+          isPublished: lawyer.isPublished,
+          date: lawyer.date
+        }
+      });
     }
     
     // Get all lawyers for admin (including unpublished)
     if (admin === 'true') {
       const lawyers = await LawyerModel.find({}).sort({ date: -1 });
-      return NextResponse.json({ lawyers });
+      
+      const lawyersWithLang = lawyers.map(lawyer => {
+        const content = lawyer.contents.find(c => c.language === 'en') || lawyer.contents[0];
+        
+        return {
+          _id: lawyer._id,
+          lawyerId: lawyer.lawyerId,
+          name: content?.name || "No name",
+          title: content?.title || "No title",
+          description: content?.description || "",
+          locations: lawyer.locations.filter(l => l.language === 'en').map(l => l.location),
+          practiceAreas: lawyer.practiceAreas.filter(p => p.language === 'en').map(p => p.practiceArea),
+          image: lawyer.image,
+          isFeatured: lawyer.isFeatured,
+          isPublished: lawyer.isPublished,
+          date: lawyer.date
+        };
+      });
+      
+      return NextResponse.json({ lawyers: lawyersWithLang });
     }
     
     // Get all lawyers with optional filters for public
@@ -45,7 +155,35 @@ export async function GET(request) {
     }
     
     const lawyers = await LawyerModel.find(filter).sort({ date: -1 });
-    return NextResponse.json({ lawyers });
+    
+    // Map to include only the requested language content - FIXED: No fallback to English
+    const lawyersWithLang = lawyers.map(lawyer => {
+      const content = lawyer.contents.find(c => c.language === lang);
+      
+      const locations = lawyer.locations
+        .filter(l => l.language === lang)
+        .map(l => l.location);
+      
+      const practiceAreas = lawyer.practiceAreas
+        .filter(p => p.language === lang)
+        .map(p => p.practiceArea);
+      
+      return {
+        _id: lawyer._id,
+        lawyerId: lawyer.lawyerId,
+        slug: lawyer.slug,
+        name: content?.name || "No name available",
+        title: content?.title || "No title available",
+        description: content?.description || "",
+        locations,
+        practiceAreas,
+        image: lawyer.image,
+        isFeatured: lawyer.isFeatured,
+        date: lawyer.date
+      };
+    });
+    
+    return NextResponse.json({ lawyers: lawyersWithLang });
     
   } catch (error) {
     console.error("GET Error:", error);
@@ -56,34 +194,48 @@ export async function GET(request) {
   }
 }
 
-// POST - Create new lawyer
+// POST - Create new lawyer (keep as is)
 export async function POST(request) {
   try {
     await connectToDB();
 
     const formData = await request.formData();
     
+    // Get basic fields
     const lawyerId = formData.get('lawyerId');
-    const name = formData.get('name');
-    const title = formData.get('title');
-    const description = formData.get('description');
-    const locations = formData.getAll('locations');
-    const practiceAreas = formData.getAll('practiceAreas');
+    const name_en = formData.get('name_en');
+    const title_en = formData.get('title_en');
+    const description_en = formData.get('description_en');
+    const name_ta = formData.get('name_ta');
+    const title_ta = formData.get('title_ta');
+    const description_ta = formData.get('description_ta');
+    const contactNumber = formData.get('contactNumber');
+    const email = formData.get('email');
+    const website = formData.get('website');
     const isFeatured = formData.get('isFeatured') === 'true';
     const isPublished = formData.get('isPublished') === 'true';
     const imageFile = formData.get('image');
 
     // Validate required fields
-    if (!lawyerId || !name || !title || !description || locations.length === 0 || 
-        practiceAreas.length === 0 || !imageFile) {
+    if (!lawyerId || !name_en || !title_en || !description_en || !contactNumber || !email || !imageFile) {
       return NextResponse.json(
         { success: false, error: "Missing required fields" },
         { status: 400 }
       );
     }
 
+    // Get all array values
+    const locations_en = formData.getAll('locations_en').filter(loc => loc && loc.trim());
+    const locations_ta = formData.getAll('locations_ta').filter(loc => loc && loc.trim());
+    const practiceAreas_en = formData.getAll('practiceAreas_en').filter(area => area && area.trim());
+    const practiceAreas_ta = formData.getAll('practiceAreas_ta').filter(area => area && area.trim());
+    const education_en = formData.getAll('education_en').filter(edu => edu && edu.trim());
+    const education_ta = formData.getAll('education_ta').filter(edu => edu && edu.trim());
+    const addresses_en = formData.getAll('addresses_en').filter(addr => addr && addr.trim());
+    const addresses_ta = formData.getAll('addresses_ta').filter(addr => addr && addr.trim());
+
     // Generate slug
-    const slug = `${name.toLowerCase().replace(/\s+/g, '-')}-${title.toLowerCase().replace(/\s+/g, '-')}`;
+    const slug = `${name_en.toLowerCase().replace(/\s+/g, '-')}-${title_en.toLowerCase().replace(/\s+/g, '-')}`;
 
     // Check if lawyer with same ID or slug already exists
     const existingLawyer = await LawyerModel.findOne({
@@ -106,18 +258,116 @@ export async function POST(request) {
       throw new Error("Cloudinary upload failed");
     }
 
+    // Prepare multilingual content
+    const contents = [
+      {
+        language: 'en',
+        name: name_en,
+        title: title_en,
+        description: description_en
+      }
+    ];
+
+    if (name_ta && title_ta && description_ta) {
+      contents.push({
+        language: 'ta',
+        name: name_ta,
+        title: title_ta,
+        description: description_ta
+      });
+    }
+
+    // Prepare multilingual locations
+    const locations = [];
+    locations_en.forEach((location, index) => {
+      if (location) {
+        locations.push({
+          language: 'en',
+          location: location
+        });
+        
+        // Add Tamil location if available at same index
+        if (locations_ta[index] && locations_ta[index].trim()) {
+          locations.push({
+            language: 'ta',
+            location: locations_ta[index]
+          });
+        }
+      }
+    });
+
+    // Prepare multilingual practice areas
+    const practiceAreas = [];
+    practiceAreas_en.forEach((area, index) => {
+      if (area) {
+        practiceAreas.push({
+          language: 'en',
+          practiceArea: area
+        });
+        
+        // Add Tamil practice area if available at same index
+        if (practiceAreas_ta[index] && practiceAreas_ta[index].trim()) {
+          practiceAreas.push({
+            language: 'ta',
+            practiceArea: practiceAreas_ta[index]
+          });
+        }
+      }
+    });
+
+    // Prepare multilingual education
+    const education = [];
+    education_en.forEach((edu, index) => {
+      if (edu) {
+        education.push({
+          language: 'en',
+          education: edu
+        });
+        
+        // Add Tamil education if available at same index
+        if (education_ta[index] && education_ta[index].trim()) {
+          education.push({
+            language: 'ta',
+            education: education_ta[index]
+          });
+        }
+      }
+    });
+
+    // Prepare multilingual addresses
+    const addresses = [];
+    addresses_en.forEach((addr, index) => {
+      if (addr) {
+        addresses.push({
+          language: 'en',
+          address: addr
+        });
+        
+        // Add Tamil address if available at same index
+        if (addresses_ta[index] && addresses_ta[index].trim()) {
+          addresses.push({
+            language: 'ta',
+            address: addresses_ta[index]
+          });
+        }
+      }
+    });
+
     // Create lawyer
     const lawyerData = {
       lawyerId,
-      name,
-      title,
-      slug,
-      description,
+      contents,
       locations,
       practiceAreas,
+      education,
+      addresses,
+      contactNumber,
+      email,
+      website: website || '',
       isFeatured,
       isPublished,
-      image: uploadResult.secure_url
+      image: uploadResult.secure_url,
+      slug
     };
 
     const newLawyer = await LawyerModel.create(lawyerData);
@@ -138,7 +388,7 @@ export async function POST(request) {
   }
 }
 
-// PUT - Update lawyer
+// PUT - Update lawyer (keep as is)
 export async function PUT(request) {
   try {
     await connectToDB();
@@ -155,12 +405,29 @@ export async function PUT(request) {
 
     const formData = await request.formData();
     
-    // Get all possible fields from form data
-    const name = formData.get('name');
-    const title = formData.get('title');
-    const description = formData.get('description');
-    const locations = formData.getAll('locations');
-    const practiceAreas = formData.getAll('practiceAreas');
+    // Get all form data
+    const name_en = formData.get('name_en');
+    const title_en = formData.get('title_en');
+    const description_en = formData.get('description_en');
+    const name_ta = formData.get('name_ta');
+    const title_ta = formData.get('title_ta');
+    const description_ta = formData.get('description_ta');
+    
+    const locations_en = formData.getAll('locations_en').filter(loc => loc && loc.trim());
+    const locations_ta = formData.getAll('locations_ta').filter(loc => loc && loc.trim());
+    
+    const practiceAreas_en = formData.getAll('practiceAreas_en').filter(area => area && area.trim());
+    const practiceAreas_ta = formData.getAll('practiceAreas_ta').filter(area => area && area.trim());
+    
+    const education_en = formData.getAll('education_en').filter(edu => edu && edu.trim());
+    const education_ta = formData.getAll('education_ta').filter(edu => edu && edu.trim());
+    
+    const addresses_en = formData.getAll('addresses_en').filter(addr => addr && addr.trim());
+    const addresses_ta = formData.getAll('addresses_ta').filter(addr => addr && addr.trim());
+    
+    const contactNumber = formData.get('contactNumber');
+    const email = formData.get('email');
+    const website = formData.get('website');
     const isFeatured = formData.get('isFeatured');
     const isPublished = formData.get('isPublished');
     const imageFile = formData.get('image');
@@ -176,37 +443,12 @@ export async function PUT(request) {
 
     let updateData = {};
 
-    // Only update fields that are provided
-    if (name) updateData.name = name;
-    if (title) updateData.title = title;
-    if (description) updateData.description = description;
-    if (locations.length > 0) updateData.locations = locations;
-    if (practiceAreas.length > 0) updateData.practiceAreas = practiceAreas;
+    // Update basic info if provided
+    if (contactNumber) updateData.contactNumber = contactNumber;
+    if (email) updateData.email = email;
+    if (website !== null) updateData.website = website;
     if (isFeatured !== null) updateData.isFeatured = isFeatured === 'true';
     if (isPublished !== null) updateData.isPublished = isPublished === 'true';
-
-    // Generate new slug if name or title changed
-    if (name || title) {
-      const newName = name || existingLawyer.name;
-      const newTitle = title || existingLawyer.title;
-      const newSlug = `${newName.toLowerCase().replace(/\s+/g, '-')}-${newTitle.toLowerCase().replace(/\s+/g, '-')}`;
-      
-      // Check if another lawyer already has this slug (excluding current lawyer)
-      if (newSlug !== existingLawyer.slug) {
-        const lawyerWithSameSlug = await LawyerModel.findOne({ 
-          slug: newSlug, 
-          lawyerId: { $ne: lawyerId } 
-        });
-        
-        if (lawyerWithSameSlug) {
-          return NextResponse.json(
-            { success: false, error: "Another lawyer with similar name/title already exists" },
-            { status: 400 }
-          );
-        }
-        updateData.slug = newSlug;
-      }
-    }
 
     // Handle image upload if new image is provided
     if (imageFile && imageFile.name !== "undefined" && imageFile.size > 0) {
@@ -232,6 +474,134 @@ export async function PUT(request) {
       updateData.image = uploadResult.secure_url;
     }
 
+    // Update multilingual content - FIXED: Replace instead of push
+    if (name_en || title_en || description_en) {
+      updateData.contents = existingLawyer.contents.filter(c => c.language !== 'en');
+      
+      updateData.contents.push({
+        language: 'en',
+        name: name_en || existingLawyer.contents.find(c => c.language === 'en')?.name || '',
+        title: title_en || existingLawyer.contents.find(c => c.language === 'en')?.title || '',
+        description: description_en || existingLawyer.contents.find(c => c.language === 'en')?.description || ''
+      });
+    }
+
+    if (name_ta || title_ta || description_ta) {
+      updateData.contents = updateData.contents || [...existingLawyer.contents];
+      
+      // Remove existing Tamil content if it exists
+      updateData.contents = updateData.contents.filter(c => c.language !== 'ta');
+      
+      if (name_ta || title_ta || description_ta) {
+        updateData.contents.push({
+          language: 'ta',
+          name: name_ta || existingLawyer.contents.find(c => c.language === 'ta')?.name || '',
+          title: title_ta || existingLawyer.contents.find(c => c.language === 'ta')?.title || '',
+          description: description_ta || existingLawyer.contents.find(c => c.language === 'ta')?.description || ''
+        });
+      }
+    }
+
+    // Update multilingual locations - FIXED: Replace arrays instead of pushing
+    if (locations_en.length > 0 || locations_ta.length > 0) {
+      updateData.locations = [];
+      
+      // Add English locations
+      locations_en.forEach(location => {
+        if (location) {
+          updateData.locations.push({
+            language: 'en',
+            location: location
+          });
+        }
+      });
+
+      // Add Tamil locations
+      locations_ta.forEach(location => {
+        if (location) {
+          updateData.locations.push({
+            language: 'ta',
+            location: location
+          });
+        }
+      });
+    }
+
+    // Update multilingual practice areas - FIXED: Replace arrays instead of pushing
+    if (practiceAreas_en.length > 0 || practiceAreas_ta.length > 0) {
+      updateData.practiceAreas = [];
+      
+      // Add English practice areas
+      practiceAreas_en.forEach(area => {
+        if (area) {
+          updateData.practiceAreas.push({
+            language: 'en',
+            practiceArea: area
+          });
+        }
+      });
+
+      // Add Tamil practice areas
+      practiceAreas_ta.forEach(area => {
+        if (area) {
+          updateData.practiceAreas.push({
+            language: 'ta',
+            practiceArea: area
+          });
+        }
+      });
+    }
+
+    // Update multilingual education - FIXED: Replace arrays instead of pushing
+    if (education_en.length > 0 || education_ta.length > 0) {
+      updateData.education = [];
+      
+      // Add English education
+      education_en.forEach(edu => {
+        if (edu) {
+          updateData.education.push({
+            language: 'en',
+            education: edu
+          });
+        }
+      });
+
+      // Add Tamil education
+      education_ta.forEach(edu => {
+        if (edu) {
+          updateData.education.push({
+            language: 'ta',
+            education: edu
+          });
+        }
+      });
+    }
+
+    // Update multilingual addresses - FIXED: Replace arrays instead of pushing
+    if (addresses_en.length > 0 || addresses_ta.length > 0) {
+      updateData.addresses = [];
+      
+      // Add English addresses
+      addresses_en.forEach(addr => {
+        if (addr) {
+          updateData.addresses.push({
+            language: 'en',
+            address: addr
+          });
+        }
+      });
+
+      // Add Tamil addresses
+      addresses_ta.forEach(addr => {
+        if (addr) {
+          updateData.addresses.push({
+            language: 'ta',
+            address: addr
+          });
+        }
+      });
+    }
+
     const updatedLawyer = await LawyerModel.findOneAndUpdate(
       { lawyerId },
       updateData,
@@ -253,7 +623,7 @@ export async function PUT(request) {
   }
 }
 
-// DELETE - Remove lawyer
+// DELETE - Remove lawyer (keep as is)
 export async function DELETE(request) {
   try {
     await connectToDB();

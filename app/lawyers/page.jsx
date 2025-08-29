@@ -27,24 +27,44 @@ const Page = () => {
 
   const changeLanguage = (lng) => {
     i18n.changeLanguage(lng)
+    fetchLawyers(lng) // Refetch lawyers when language changes
   }
 
-  const fetchLawyers = async () => {
+  const fetchLawyers = async (language = i18n.language) => {
     try {
       setLoading(true)
-      const response = await axios.get('/api/lawyers')
+      const response = await axios.get(`/api/lawyers?lang=${language}`)
       const lawyersData = response.data.lawyers
       setLawyers(lawyersData)
       setFilteredLawyers(lawyersData)
       
-      // Extract unique locations and practice areas
-      const locations = [...new Set(lawyersData.flatMap(lawyer => lawyer.locations))]
-      const practiceAreas = [...new Set(lawyersData.flatMap(lawyer => lawyer.practiceAreas))]
+      // Extract unique locations and practice areas from the current response
+      const locationsSet = new Set()
+      const practiceAreasSet = new Set()
       
-      setAllLocations(locations)
-      setAllPracticeAreas(practiceAreas)
+      lawyersData.forEach(lawyer => {
+        // Add locations
+        if (lawyer.locations) {
+          lawyer.locations.forEach(location => {
+            if (location) locationsSet.add(location)
+          })
+        }
+        
+        // Add practice areas
+        if (lawyer.practiceAreas) {
+          lawyer.practiceAreas.forEach(area => {
+            if (area) practiceAreasSet.add(area)
+          })
+        }
+      })
+      
+      setAllLocations(Array.from(locationsSet).filter(item => item))
+      setAllPracticeAreas(Array.from(practiceAreasSet).filter(item => item))
     } catch (error) {
       console.error('Error fetching lawyers:', error)
+      // Fallback: set empty arrays
+      setAllLocations([])
+      setAllPracticeAreas([])
     } finally {
       setLoading(false)
     }
@@ -60,17 +80,17 @@ const Page = () => {
     // Apply search filter
     if (searchTerm) {
       results = results.filter(lawyer =>
-        lawyer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lawyer.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lawyer.description.toLowerCase().includes(searchTerm.toLowerCase())
+        lawyer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lawyer.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lawyer.description?.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
     
     // Apply location filter
     if (locationFilter) {
       results = results.filter(lawyer =>
-        lawyer.locations.some(location =>
-          location.toLowerCase().includes(locationFilter.toLowerCase())
+        lawyer.locations?.some(location =>
+          location?.toLowerCase().includes(locationFilter.toLowerCase())
         )
       )
     }
@@ -78,8 +98,8 @@ const Page = () => {
     // Apply practice area filter
     if (practiceAreaFilter) {
       results = results.filter(lawyer =>
-        lawyer.practiceAreas.some(area =>
-          area.toLowerCase().includes(practiceAreaFilter.toLowerCase())
+        lawyer.practiceAreas?.some(area =>
+          area?.toLowerCase().includes(practiceAreaFilter.toLowerCase())
         )
       )
     }
@@ -116,7 +136,7 @@ const Page = () => {
               <select 
                 value={i18n.language} 
                 onChange={(e) => changeLanguage(e.target.value)}
-                className='px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all cursor-pointer appearance-none bg-[url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBzdHJva2U9IiM3ODc5N0EiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cG9seWxpbmUgcG9pbnRzPSI2IDkgMTIgMTUgMTggOSI+PC9wb2x5bGluZT48L3N2Zz4=")] bg-no-repeat bg-[center_right_0.5rem] bg-[length:16px_16px] pr-8'
+                className='px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all cursor-pointer appearance-none bg-[url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBzdHJva2U9IiM3ODc5N0EiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cG9seWxpbmUzcG9pbnRzPSI2IDkgMTIgMTUgMTggOSI+PC9wb2x5bGluZT48L3N2Zz4=")] bg-no-repeat bg-[center_right_0.5rem] bg-[length:16px_16px] pr-8'
               >
                 <option value="en">EN</option>
                 <option value="ta">TA</option>
@@ -183,7 +203,7 @@ const Page = () => {
             </Link>
             <Link 
               href='/#services' 
-              className={`font-medium text-sm tracking-wide transition-colors ${menu === 'services' ? 'text-blue-600' : 'text-gray-600 hover:text-blue-500'}`}
+              className={`font-medium text-sm tracking-wide transition-colors ${menu === 'services'?'text-blue-600' : 'text-gray-600 hover:text-blue-500'}`}
               onClick={() => setMenu('services')}
             >
               {t('Services')}
@@ -216,7 +236,7 @@ const Page = () => {
             <select 
               value={i18n.language} 
               onChange={(e) => changeLanguage(e.target.value)}
-              className='px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all cursor-pointer appearance-none bg-[url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBzdHJva2U9IiM3ODc5N0EiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cG9seWxpbmUgcG9pbnRzPSI2IDkgMTIgMTUgMTggOSI+PC9wb2x5bGluZT48L3N2Zz4=")] bg-no-repeat bg-[center_right_0.5rem] bg-[length:16px_16px] pr-8'
+              className='px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all cursor-pointer appearance-none bg-[url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiBzdHJva2U9IiM3ODc5N0EiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cG9seWxpbmUzcG9pbnRzPSI2IDkgMTIgMTUgMTggOSI+PC9wb2x5bGluZT48L3N2Zz4=")] bg-no-repeat bg-[center_right_0.5rem] bg-[length:16px_16px] pr-8'
             >
               <option value="en">EN</option>
               <option value="ta">TA</option>
@@ -290,9 +310,9 @@ const Page = () => {
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="text-center mb-12">
-            <h1 className="text-3xl font-light text-gray-900 mb-4">Legal Experts Directory</h1>
+            <h1 className="text-3xl font-light text-gray-900 mb-4">{t('Legal Experts Directory')}</h1>
             <p className="text-gray-500 max-w-2xl mx-auto">
-              Connect with experienced legal professionals dedicated to your success
+              {t('Connect with experienced legal professionals dedicated to your success')}
             </p>
           </div>
           
@@ -300,11 +320,11 @@ const Page = () => {
           <div className="bg-gray-50 p-6 rounded-xl mb-8">
             <div className="flex flex-col md:flex-row gap-4 items-end">
               <div className="flex-1">
-                <label className="block text-sm font-light text-gray-700 mb-2">Search by name or expertise</label>
+                <label className="block text-sm font-light text-gray-700 mb-2">{t('Search by name or expertise')}</label>
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Search legal experts..."
+                    placeholder={t('Search legal experts...')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-300 focus:border-gray-300 bg-white"
@@ -318,7 +338,7 @@ const Page = () => {
                 className="flex items-center px-4 py-3 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 <Filter size={16} className="mr-2" />
-                Filters
+                {t('Filters')}
               </button>
               
               {hasActiveFilters && (
@@ -327,7 +347,7 @@ const Page = () => {
                   className="flex items-center px-4 py-3 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   <X size={16} className="mr-2" />
-                  Clear
+                  {t('Clear')}
                 </button>
               )}
             </div>
@@ -336,14 +356,14 @@ const Page = () => {
             {showFilters && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-200">
                 <div>
-                  <label className="block text-sm font-light text-gray-700 mb-2">Location</label>
+                  <label className="block text-sm font-light text-gray-700 mb-2">{t('Location')}</label>
                   <div className="relative">
                     <select
                       value={locationFilter}
                       onChange={(e) => setLocationFilter(e.target.value)}
                       className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-300 focus:border-gray-300 bg-white appearance-none"
                     >
-                      <option value="">All Locations</option>
+                      <option value="">{t('All Locations')}</option>
                       {allLocations.map((location, index) => (
                         <option key={index} value={location}>{location}</option>
                       ))}
@@ -355,14 +375,14 @@ const Page = () => {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-light text-gray-700 mb-2">Practice Area</label>
+                  <label className="block text-sm font-light text-gray-700 mb-2">{t('Practice Area')}</label>
                   <div className="relative">
                     <select
                       value={practiceAreaFilter}
                       onChange={(e) => setPracticeAreaFilter(e.target.value)}
                       className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-300 focus:border-gray-300 bg-white appearance-none"
                     >
-                      <option value="">All Practice Areas</option>
+                      <option value="">{t('All Practice Areas')}</option>
                       {allPracticeAreas.map((area, index) => (
                         <option key={index} value={area}>{area}</option>
                       ))}
@@ -379,7 +399,7 @@ const Page = () => {
           {/* Results Count */}
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-light text-gray-900">
-              {filteredLawyers.length} {filteredLawyers.length === 1 ? 'Expert' : 'Experts'} Available
+              {filteredLawyers.length} {filteredLawyers.length === 1 ? t('Expert') : t('Experts')} {t('Available')}
             </h2>
             {hasActiveFilters && (
               <button
@@ -387,7 +407,7 @@ const Page = () => {
                 className="flex items-center text-sm text-gray-500 hover:text-gray-700"
               >
                 <X size={14} className="mr-1" />
-                Clear filters
+                {t('Clear filters')}
               </button>
             )}
           </div>
@@ -406,29 +426,33 @@ const Page = () => {
                     />
                   </div>
                   <div className="p-5">
-                    <h3 className="text-lg font-normal text-gray-900">{lawyer.name}</h3>
-                    <p className="text-sm text-gray-500 mt-1">{lawyer.title}</p>
+                    <h3 className="text-lg font-normal text-gray-900">{lawyer.name || t("No name available")}</h3>
+                    <p className="text-sm text-gray-500 mt-1">{lawyer.title || t("No title available")}</p>
                     
                     <div className="mt-4">
-                      <p className="text-sm text-gray-600 line-clamp-2">{lawyer.description}</p>
+                      <p className="text-sm text-gray-600 line-clamp-2">{lawyer.description || ""}</p>
                     </div>
                     
-                    <div className="mt-4 flex items-center text-sm text-gray-500">
-                      <MapPin size={14} className="mr-1.5" />
-                      <span className="line-clamp-1">{lawyer.locations.join(', ')}</span>
-                    </div>
+                    {lawyer.locations && lawyer.locations.length > 0 && (
+                      <div className="mt-4 flex items-center text-sm text-gray-500">
+                        <MapPin size={14} className="mr-1.5" />
+                        <span className="line-clamp-1">{lawyer.locations.join(', ')}</span>
+                      </div>
+                    )}
                     
-                    <div className="mt-2 flex items-center text-sm text-gray-500">
-                      <Briefcase size={14} className="mr-1.5" />
-                      <span className="line-clamp-1">{lawyer.practiceAreas.join(', ')}</span>
-                    </div>
+                    {lawyer.practiceAreas && lawyer.practiceAreas.length > 0 && (
+                      <div className="mt-2 flex items-center text-sm text-gray-500">
+                        <Briefcase size={14} className="mr-1.5" />
+                        <span className="line-clamp-1">{lawyer.practiceAreas.join(', ')}</span>
+                      </div>
+                    )}
                     
                     <div className="mt-5 pt-4 border-t border-gray-100">
                       <Link
                         href={`/lawyers/${lawyer.slug}`}
                         className="inline-flex items-center text-sm text-gray-700 hover:text-gray-900 transition-colors hover:underline"
                       >
-                        View Profile
+                        {t('View Profile')}
                         <svg className="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
                         </svg>
@@ -441,13 +465,13 @@ const Page = () => {
           ) : (
             <div className="text-center py-16 bg-gray-50 rounded-xl">
               <Search size={48} className="mx-auto text-gray-300 mb-4" />
-              <p className="text-gray-500 mb-4">No experts found matching your criteria.</p>
+              <p className="text-gray-500 mb-4">{t('No experts found matching your criteria.')}</p>
               {hasActiveFilters && (
                 <button
                   onClick={clearFilters}
                   className="px-5 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
                 >
-                  Clear Filters
+                  {t('Clear Filters')}
                 </button>
               )}
             </div>

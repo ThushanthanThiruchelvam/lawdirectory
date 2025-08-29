@@ -23,9 +23,16 @@ const LawyerProfilePage = () => {
     try {
       setLoading(true);
       const response = await axios.get(`/api/lawyers?slug=${slug}&lang=${i18n.language}`);
+      
+      if (response.data.success === false) {
+        setError(response.data.error || 'Lawyer not found');
+        return;
+      }
+      
       setLawyer(response.data.lawyer);
     } catch (err) {
-      setError('Lawyer not found');
+      console.error('Error fetching lawyer:', err);
+      setError('Failed to load lawyer profile');
     } finally {
       setLoading(false);
     }
@@ -132,7 +139,7 @@ const LawyerProfilePage = () => {
             <div className="md:hidden bg-white border-t border-gray-200 px-5 py-4">
               <div className="flex flex-col space-y-3">
                 <Link href="/" className="font-medium text-gray-700 hover:text-blue-600 py-2">Home</Link>
-                <Link href="/#about" className="font-medium text-gray-700 hover:text-blue-600 py-2">About</Link>
+                <Link href="/#about" className="font-medium text-gray-70 hover:text-blue-600 py-2">About</Link>
                 <Link href="/#services" className="font-medium text-gray-700 hover:text-blue-600 py-2">Services</Link>
                 <Link href="/#lawyers" className="font-medium text-gray-700 hover:text-blue-600 py-2">Lawyers</Link>
                 <Link href="/#blog" className="font-medium text-gray-700 hover:text-blue-600 py-2">Blog</Link>
@@ -258,7 +265,7 @@ const LawyerProfilePage = () => {
         <div className="min-h-screen flex items-center justify-center px-4">
           <div className="text-center">
             <h1 className="text-xl font-medium text-gray-900 mb-2">Lawyer Not Found</h1>
-            <p className="text-gray-500">The lawyer you're looking for doesn't exist.</p>
+            <p className="text-gray-500">{error || "The lawyer you're looking for doesn't exist."}</p>
             <Link href="/lawyers" className="mt-4 inline-block px-4 py-2 bg-gray-800 text-white rounded text-sm hover:bg-gray-700 transition-colors">
               Browse All Lawyers
             </Link>
@@ -399,51 +406,111 @@ const LawyerProfilePage = () => {
               <div>
                 <h1 className="text-2xl font-semibold text-gray-900">{lawyer.name}</h1>
                 <p className="text-gray-600 mt-1">{lawyer.title}</p>
-                <div className="text-xs text-gray-400 mt-2">ID: {lawyer.lawyerId}</div>
+                {lawyer.lawyerId && (
+                  <div className="text-xs text-gray-400 mt-2">ID: {lawyer.lawyerId}</div>
+                )}
               </div>
             </div>
             
             {/* About Section */}
-            <div className="border-t border-gray-100 pt-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">About</h2>
-              <p className="text-gray-600 leading-relaxed">{lawyer.description}</p>
-            </div>
+            {lawyer.description && (
+              <div className="border-t border-gray-100 pt-6">
+                <h2 className="text-lg font-medium text-gray-900 mb-4">About</h2>
+                <p className="text-gray-600 leading-relaxed">{lawyer.description}</p>
+              </div>
+            )}
             
             {/* Details Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {lawyer.locations && lawyer.locations.length > 0 && (
+                <div>
+                  <h3 className="text-base font-medium text-gray-900 mb-3">Locations</h3>
+                  <ul className="space-y-2">
+                    {lawyer.locations.map((location, index) => (
+                      <li key={index} className="flex items-start text-gray-600">
+                        <svg className="w-4 h-4 mt-0.5 mr-2 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        {location}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {lawyer.practiceAreas && lawyer.practiceAreas.length > 0 && (
+                <div>
+                  <h3 className="text-base font-medium text-gray-900 mb-3">Practice Areas</h3>
+                  <ul className="space-y-2">
+                    {lawyer.practiceAreas.map((area, index) => (
+                      <li key={index} className="flex items-start text-gray-600">
+                        <svg className="w-4 h-4 mt-0.5 mr-2 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        {area}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            {/* Education Section */}
+            {lawyer.education && lawyer.education.length > 0 && (
               <div>
-                <h3 className="text-base font-medium text-gray-900 mb-3">Locations</h3>
+                <h3 className="text-base font-medium text-gray-900 mb-3">Education</h3>
                 <ul className="space-y-2">
-                  {lawyer.locations.map((location, index) => (
+                  {lawyer.education.map((edu, index) => (
+                    <li key={index} className="flex items-start text-gray-600">
+                      <svg className="w-4 h-4 mt-0.5 mr-2 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l9-5-9-5-9 5 9 5z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 10l9-5-9-5-9 5 9 5z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17l9-5-9-5-9 5 9 5z" />
+                      </svg>
+                      {edu}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Address Section */}
+            {lawyer.addresses && lawyer.addresses.length > 0 && (
+              <div>
+                <h3 className="text-base font-medium text-gray-900 mb-3">Address</h3>
+                <ul className="space-y-2">
+                  {lawyer.addresses.map((address, index) => (
                     <li key={index} className="flex items-start text-gray-600">
                       <svg className="w-4 h-4 mt-0.5 mr-2 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      {location}
+                      {address}
                     </li>
                   ))}
                 </ul>
               </div>
-              
-              <div>
-                <h3 className="text-base font-medium text-gray-900 mb-3">Practice Areas</h3>
-                <ul className="space-y-2">
-                  {lawyer.practiceAreas.map((area, index) => (
-                    <li key={index} className="flex items-start text-gray-600">
-                      <svg className="w-4 h-4 mt-0.5 mr-2 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      {area}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+            )}
             
             {/* Contact Section */}
             <div className="bg-gray-50 p-5 rounded-lg border border-gray-100">
               <h3 className="text-base font-medium text-gray-900 mb-2">Contact Information</h3>
+              {lawyer.contactNumber && (
+                <p className="text-gray-600 text-sm mb-2">
+                  <span className="font-medium">Phone:</span> {lawyer.contactNumber}
+                </p>
+              )}
+              {lawyer.email && (
+                <p className="text-gray-600 text-sm mb-2">
+                  <span className="font-medium">Email:</span> {lawyer.email}
+                </p>
+              )}
+              {lawyer.website && (
+                <p className="text-gray-600 text-sm mb-2">
+                  <span className="font-medium">Website:</span> {lawyer.website}
+                </p>
+              )}
               <p className="text-gray-600 text-sm">For inquiries or to schedule a consultation, please contact our office.</p>
             </div>
           </div>

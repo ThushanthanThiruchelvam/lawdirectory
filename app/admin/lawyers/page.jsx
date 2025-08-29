@@ -13,7 +13,7 @@ const Page = () => {
   
   const fetchLawyers = async () => {
     try {
-      const response = await axios.get('/api/lawyers/admin');
+      const response = await axios.get('/api/lawyers?admin=true');
       setLawyers(response.data.lawyers);
     } catch (error) {
       console.error('Error fetching lawyers:', error);
@@ -45,11 +45,7 @@ const Page = () => {
       const formData = new FormData();
       formData.append('isFeatured', (!currentStatus).toString());
       
-      const response = await axios.put(`/api/lawyers?id=${lawyerId}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await axios.put(`/api/lawyers?id=${lawyerId}`, formData);
       
       if (response.data.success) {
         toast.success('Featured status updated');
@@ -66,11 +62,7 @@ const Page = () => {
       const formData = new FormData();
       formData.append('isPublished', (!currentStatus).toString());
       
-      const response = await axios.put(`/api/lawyers?id=${lawyerId}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await axios.put(`/api/lawyers?id=${lawyerId}`, formData);
       
       if (response.data.success) {
         toast.success('Published status updated');
@@ -153,10 +145,10 @@ const Page = () => {
                         {lawyer.lawyerId}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {lawyer.locations.join(', ')}
+                        {lawyer.locations && lawyer.locations.length > 0 ? lawyer.locations.join(', ') : 'No locations'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {lawyer.practiceAreas.join(', ')}
+                        {lawyer.practiceAreas && lawyer.practiceAreas.length > 0 ? lawyer.practiceAreas.join(', ') : 'No practice areas'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex flex-col space-y-4">
