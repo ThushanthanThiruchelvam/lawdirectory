@@ -4,7 +4,7 @@ import axios from 'axios';
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
-import { Search, X, MapPin, Briefcase, Star } from 'lucide-react';
+import { Search, X, MapPin, Briefcase, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 const LawyersSection = () => {
@@ -18,6 +18,8 @@ const LawyersSection = () => {
   const [allPracticeAreas, setAllPracticeAreas] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lawyersPerPage] = useState(6);
   const { t, i18n } = useTranslation();
 
   const fetchLawyers = async () => {
@@ -51,6 +53,7 @@ const LawyersSection = () => {
   const handleSearch = () => {
     setIsSearching(true);
     setShowResults(true);
+    setCurrentPage(1);
     setTimeout(() => setIsSearching(false), 500);
   };
 
@@ -59,6 +62,7 @@ const LawyersSection = () => {
     setLocationFilter('');
     setPracticeAreaFilter('');
     setShowResults(false);
+    setCurrentPage(1);
   };
 
   const filteredLawyers = lawyers.filter(lawyer => {
@@ -79,6 +83,14 @@ const LawyersSection = () => {
     
     return matchesSearch && matchesLocation && matchesPracticeArea;
   });
+
+  // Pagination logic
+  const indexOfLastLawyer = currentPage * lawyersPerPage;
+  const indexOfFirstLawyer = indexOfLastLawyer - lawyersPerPage;
+  const currentLawyers = filteredLawyers.slice(indexOfFirstLawyer, indexOfLastLawyer);
+  const totalPages = Math.ceil(filteredLawyers.length / lawyersPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const hasActiveFilters = searchTerm || locationFilter || practiceAreaFilter;
 
@@ -183,15 +195,6 @@ const LawyersSection = () => {
                   </>
                 )}
               </button>
-              {hasActiveFilters && (
-                <button
-                  onClick={clearFilters}
-                  className="px-4 py-3 bg-white text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                  title={t('Clear all filters')}
-                >
-                  <X size={16} />
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -222,10 +225,47 @@ const LawyersSection = () => {
             ) : filteredLawyers.length > 0 ? (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                  {filteredLawyers.map((lawyer) => (
+                  {currentLawyers.map((lawyer) => (
                     <LawyerCard key={lawyer._id} lawyer={lawyer} />
                   ))}
                 </div>
+                
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex justify-center mt-8 mb-12">
+                    <nav className="flex items-center space-x-2">
+                      <button
+                        onClick={() => paginate(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => paginate(page)}
+                          className={`w-10 h-10 rounded-lg border flex items-center justify-center ${
+                            currentPage === page
+                              ? 'bg-gray-900 text-white border-gray-900'
+                              : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                      
+                      <button
+                        onClick={() => paginate(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </nav>
+                  </div>
+                )}
                 
                 {featuredLawyers.length > 0 && (
                   <div className="mb-12">
