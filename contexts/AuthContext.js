@@ -12,18 +12,34 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // Check if admin is logged in on app load
-    const token = localStorage.getItem('adminToken');
-    const adminData = localStorage.getItem('adminData');
-    
-    if (token && adminData) {
-      setAdmin(JSON.parse(adminData));
-      // Set default authorization header
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    }
-    setLoading(false);
+    const initializeAuth = async () => {
+      const token = localStorage.getItem('adminToken');
+      const adminData = localStorage.getItem('adminData');
+      
+      if (token && adminData) {
+        try {
+          // Verify token is still valid by making a simple API call
+          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          
+          // Optional: You can add a token validation API endpoint
+          // const response = await axios.get('/api/admin/validate');
+          
+          setAdmin(JSON.parse(adminData));
+        } catch (error) {
+          // Token is invalid, clear storage
+          localStorage.removeItem('adminData');
+          localStorage.removeItem('adminToken');
+          delete axios.defaults.headers.common['Authorization'];
+        }
+      }
+      setLoading(false);
+      setIsInitialized(true);
+    };
+
+    initializeAuth();
   }, []);
 
   const login = async (email, password) => {
@@ -38,7 +54,6 @@ export function AuthProvider({ children }) {
         setAdmin(admin);
         localStorage.setItem('adminData', JSON.stringify(admin));
         localStorage.setItem('adminToken', token);
-        // Set default authorization header
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         return { success: true };
       }
@@ -61,12 +76,13 @@ export function AuthProvider({ children }) {
     admin,
     login,
     logout,
-    isAuthenticated: !!admin
+    isAuthenticated: !!admin,
+    loading: !isInitialized
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 }

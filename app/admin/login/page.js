@@ -103,6 +103,7 @@ export default function LoginPage() {
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                suppressHydrationWarning={true}
               />
             </div>
             <div>
@@ -119,6 +120,7 @@ export default function LoginPage() {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                suppressHydrationWarning={true}
               />
             </div>
           </div>
@@ -128,6 +130,7 @@ export default function LoginPage() {
               type="submit"
               disabled={loading}
               className="w-full py-3 px-4 text-white bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-800 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
+              suppressHydrationWarning={true}
             >
               {loading ? (
                 <>

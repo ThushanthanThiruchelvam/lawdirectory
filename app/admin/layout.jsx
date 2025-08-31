@@ -1,15 +1,14 @@
 'use client'
 
-import { assets } from "@/Assets/assets";
 import Sidebar from "@/Components/AdminComponents/Sidebar";
-import Image from "next/image";
+
 import { ToastContainer } from 'react-toastify';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePathname } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 
 export default function Layout({ children }) {
-  const { admin, logout } = useAuth();
+  const { admin, logout, isAuthenticated, loading } = useAuth();
   const pathname = usePathname();
   const { i18n } = useTranslation();
 
@@ -17,14 +16,19 @@ export default function Layout({ children }) {
     i18n.changeLanguage(lng);
   };
 
-  // Don't show admin layout for login page
-  if (pathname === '/admin/login') {
+  // Don't show admin layout for login page or while loading
+  if (pathname === '/admin/login' || loading) {
     return (
       <>
         <ToastContainer theme="dark"/>
         {children}
       </>
     );
+  }
+
+  // If not authenticated, don't render the admin layout
+  if (!isAuthenticated) {
+    return null;
   }
 
   return (
@@ -36,8 +40,6 @@ export default function Layout({ children }) {
           <div className="flex items-center justify-between w-full py-3 max-h-[60px] px-12 border-b border-gray-200">
             <h3 className="font-medium text-gray-700">Admin Panel</h3>
             <div className="flex items-center gap-4">
-
-              
               {/* Language Selector */}
               <div className="relative">
                 <select 
@@ -48,11 +50,6 @@ export default function Layout({ children }) {
                   <option value="en">EN</option>
                   <option value="ta">TA</option>
                 </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                  <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                  </svg>
-                </div>
               </div>
               
               <button 

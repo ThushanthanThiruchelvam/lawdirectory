@@ -11,7 +11,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (!loading) {
       if (isAuthenticated) {
-        router.push('/admin/add-blog');
+        router.push('/admin/add-profile');
       } else {
         router.push('/admin/login');
       }
