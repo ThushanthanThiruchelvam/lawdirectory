@@ -39,6 +39,14 @@ export async function GET(request) {
             tagline: 'உங்கள் டேக்லைன்',
             about: 'பற்றி பகுதி உள்ளடக்கம்',
             address: 'உங்கள் முகவரி'
+          },
+          {
+            language: 'si',
+            fullName: 'ඔබේ නම',
+            title: 'ඔබේ මාතෘකාව',
+            tagline: 'ඔබේ ටැග්ලයින්',
+            about: 'පිළිබඳ අංශයේ අන්තර්ගතය',
+            address: 'ඔබේ ලිපිනය'
           }
         ],
         contacts: {
@@ -91,7 +99,7 @@ export async function PUT(request) {
 
     const formData = await request.formData();
     
-    // Get form data for both languages
+    // Get form data for all languages
     const fullName_en = formData.get('fullName_en');
     const title_en = formData.get('title_en');
     const tagline_en = formData.get('tagline_en');
@@ -103,6 +111,12 @@ export async function PUT(request) {
     const tagline_ta = formData.get('tagline_ta');
     const about_ta = formData.get('about_ta');
     const address_ta = formData.get('address_ta');
+    
+    const fullName_si = formData.get('fullName_si');
+    const title_si = formData.get('title_si');
+    const tagline_si = formData.get('tagline_si');
+    const about_si = formData.get('about_si');
+    const address_si = formData.get('address_si');
     
     // Contact information
     const phone = formData.get('phone');
@@ -164,6 +178,18 @@ export async function PUT(request) {
         tagline: tagline_ta,
         about: about_ta,
         address: address_ta
+      });
+    }
+
+    // Add Sinhala content if provided
+    if (fullName_si && title_si && tagline_si && about_si && address_si) {
+      updateData.contents.push({
+        language: 'si',
+        fullName: fullName_si,
+        title: title_si,
+        tagline: tagline_si,
+        about: about_si,
+        address: address_si
       });
     }
 

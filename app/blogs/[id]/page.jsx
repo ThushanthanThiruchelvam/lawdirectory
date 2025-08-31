@@ -97,10 +97,9 @@ const Page = ({ params }) => {
                         >
                             <option value="en">EN</option>
                             <option value="ta">TA</option>
+                            <option value="si">SI</option>
                         </select>
-                        <button className='text-sm font-medium py-2 px-4 border border-gray-800 rounded hover:bg-gray-800 hover:text-white transition-colors'>
-                            {t('Get Started')}
-                        </button>
+
                     </div>
                 </div>
                 <div className='text-center my-16'>

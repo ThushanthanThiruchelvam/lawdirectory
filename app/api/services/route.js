@@ -59,7 +59,8 @@ export async function GET(request) {
       // Map to include only the requested language content
       const servicesWithLang = services.map(service => {
         const content = service.contents.find(c => c.language === lang) || 
-                       service.contents.find(c => c.language === 'en');
+                       service.contents.find(c => c.language === 'en') ||
+                       service.contents[0];
         
         return {
           _id: service._id,
@@ -88,11 +89,13 @@ export async function POST(request) {
 
     const formData = await request.formData();
     
-    // Get form data for both languages
+    // Get form data for all languages
     const title_en = formData.get('title_en');
     const description_en = formData.get('description_en');
     const title_ta = formData.get('title_ta');
     const description_ta = formData.get('description_ta');
+    const title_si = formData.get('title_si');
+    const description_si = formData.get('description_si');
     const order = formData.get('order') || 0;
     const iconFile = formData.get('icon');
 
@@ -141,6 +144,15 @@ export async function POST(request) {
       });
     }
 
+    // Add Sinhala content if provided
+    if (title_si && description_si) {
+      serviceData.contents.push({
+        language: 'si',
+        title: title_si,
+        description: description_si
+      });
+    }
+
     const newService = await ServiceModel.create(serviceData);
 
     return NextResponse.json({
@@ -175,11 +187,13 @@ export async function PUT(request) {
 
     const formData = await request.formData();
     
-    // Get form data for both languages
+    // Get form data for all languages
     const title_en = formData.get('title_en');
     const description_en = formData.get('description_en');
     const title_ta = formData.get('title_ta');
     const description_ta = formData.get('description_ta');
+    const title_si = formData.get('title_si');
+    const description_si = formData.get('description_si');
     const order = formData.get('order');
     const isActive = formData.get('isActive');
     const iconFile = formData.get('icon');
@@ -235,6 +249,15 @@ export async function PUT(request) {
           language: 'ta',
           title: title_ta,
           description: description_ta
+        });
+      }
+
+      // Add Sinhala content if provided
+      if (title_si && description_si) {
+        updateData.contents.push({
+          language: 'si',
+          title: title_si,
+          description: description_si
         });
       }
     }

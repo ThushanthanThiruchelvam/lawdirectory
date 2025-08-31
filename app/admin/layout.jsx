@@ -42,14 +42,15 @@ export default function Layout({ children }) {
             <div className="flex items-center gap-4">
               {/* Language Selector */}
               <div className="relative">
-                <select 
-                  value={i18n.language} 
-                  onChange={(e) => changeLanguage(e.target.value)}
-                  className="px-6 py-1 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent appearance-none cursor-pointer transition-colors duration-200"
-                >
-                  <option value="en">EN</option>
-                  <option value="ta">TA</option>
-                </select>
+<select 
+  value={i18n.language} 
+  onChange={(e) => changeLanguage(e.target.value)}
+  className="px-6 py-1 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent appearance-none cursor-pointer transition-colors duration-200"
+>
+  <option value="en">EN</option>
+  <option value="ta">TA</option>
+  <option value="si">SI</option> {/* Add Sinhala */}
+</select>
               </div>
               
               <button 

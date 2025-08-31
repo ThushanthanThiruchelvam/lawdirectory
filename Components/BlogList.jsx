@@ -21,7 +21,7 @@ const BlogList = () => {
             setBlogs(response.data.blogs);
             setCurrentPage(1);
         } catch (err) {
-            setError(t('Failed to fetch blogs'));
+            setError(t('Failed to fetch blogs', 'Failed to fetch blogs'));
         } finally {
             setLoading(false);
         }
@@ -83,13 +83,13 @@ const BlogList = () => {
         return pageNumbers.slice(start - 1, end);
     };
 
-    if (loading) return <div className="text-center py-10">{t('Loading...')}</div>;
+    if (loading) return <div className="text-center py-10">{t('Loading...', 'Loading...')}</div>;
     if (error) return <div className="text-center py-10 text-red-500">{error}</div>;
 
     return (
         <div>
             <div className='text-center my-12'>
-                <h1 className='text-3xl font-semibold text-gray-800'>{t('Latest Blogs')}</h1>
+                <h1 className='text-3xl font-semibold text-gray-800'>{t('Latest Blogs', 'Latest Blogs')}</h1>
             </div>
             
             <div className='flex justify-center gap-4 my-8'>
@@ -103,7 +103,7 @@ const BlogList = () => {
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                     >
-                        {t(item)}
+                        {t(item, item)}
                     </button>
                 ))}
             </div>
@@ -132,7 +132,7 @@ const BlogList = () => {
                                 : 'text-gray-700 hover:bg-gray-100'
                         }`}
                     >
-                        &larr; {t('Previous')}
+                        &larr; {t('Previous', 'Previous')}
                     </button>
                     
                     {getDisplayedPageNumbers().map(number => (
@@ -158,7 +158,7 @@ const BlogList = () => {
                                 : 'text-gray-700 hover:bg-gray-100'
                         }`}
                     >
-                        {t('Next')} &rarr;
+                        {t('Next', 'Next')} &rarr;
                     </button>
                 </div>
             )}

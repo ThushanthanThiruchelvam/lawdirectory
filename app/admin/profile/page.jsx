@@ -29,6 +29,11 @@ const ProfilePage = () => {
     tagline_ta: "",
     about_ta: "",
     address_ta: "",
+    fullName_si: "",
+    title_si: "",
+    tagline_si: "",
+    about_si: "",
+    address_si: "",
     phone: "",
     email: "",
     whatsapp: "",
@@ -60,6 +65,11 @@ const ProfilePage = () => {
           tagline_ta: "",
           about_ta: "",
           address_ta: "",
+          fullName_si: "",
+          title_si: "",
+          tagline_si: "",
+          about_si: "",
+          address_si: "",
           phone: profile.contacts?.phone || "",
           email: profile.contacts?.email || "",
           whatsapp: profile.contacts?.whatsapp || "",
@@ -88,6 +98,24 @@ const ProfilePage = () => {
           }
         } catch (taError) {
           console.log("No Tamil content available yet");
+        }
+
+        // Try to fetch Sinhala content
+        try {
+          const responseSi = await axios.get('/api/profile?lang=si');
+          if (responseSi.data && responseSi.data.profile) {
+            const profileSi = responseSi.data.profile;
+            setData(prev => ({
+              ...prev,
+              fullName_si: profileSi.fullName || "",
+              title_si: profileSi.title || "",
+              tagline_si: profileSi.tagline || "",
+              about_si: profileSi.about || "",
+              address_si: profileSi.address || ""
+            }));
+          }
+        } catch (siError) {
+          console.log("No Sinhala content available yet");
         }
       }
     } catch (error) {
@@ -133,6 +161,13 @@ const ProfilePage = () => {
       formData.append('tagline_ta', data.tagline_ta);
       formData.append('about_ta', data.about_ta);
       formData.append('address_ta', data.address_ta);
+      
+      // Sinhala content
+      formData.append('fullName_si', data.fullName_si);
+      formData.append('title_si', data.title_si);
+      formData.append('tagline_si', data.tagline_si);
+      formData.append('about_si', data.about_si);
+      formData.append('address_si', data.address_si);
       
       // Contact information
       formData.append('phone', data.phone);
@@ -299,6 +334,13 @@ const ProfilePage = () => {
               >
                 Tamil
               </button>
+              <button 
+                type="button"
+                className={`px-4 py-3 text-sm font-medium ${activeTab === 'si' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                onClick={() => setActiveTab('si')}
+              >
+                Sinhala
+              </button>
             </div>
             
             <form onSubmit={onSubmitHandler}>
@@ -418,6 +460,66 @@ const ProfilePage = () => {
                       name='address_ta' 
                       onChange={onChangeHandler} 
                       value={data.address_ta} 
+                      className='w-full px-4 py-2.5 text-gray-900 border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors' 
+                      rows="3"
+                      placeholder={t('Address')} 
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {/* Sinhala Content */}
+              {activeTab === 'si' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-2'>{t('Full Name')} (Sinhala)</label>
+                    <input 
+                      name='fullName_si' 
+                      onChange={onChangeHandler} 
+                      value={data.fullName_si} 
+                      className='w-full px-4 py-2.5 text-gray-900 border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors' 
+                      type="text" 
+                      placeholder={t('Full Name')} 
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-2'>{t('Title')} (Sinhala)</label>
+                    <input 
+                      name='title_si' 
+                      onChange={onChangeHandler} 
+                      value={data.title_si} 
+                      className='w-full px-4 py-2.5 text-gray-900 border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors' 
+                      type="text" 
+                      placeholder={t('Title')} 
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className='block text-sm font-medium text-gray-700 mb-2'>{t('Tagline')} (Sinhala)</label>
+                    <input 
+                      name='tagline_si' 
+                      onChange={onChangeHandler} 
+                      value={data.tagline_si} 
+                      className='w-full px-4 py-2.5 text-gray-900 border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors' 
+                      type="text" 
+                      placeholder={t('Tagline')} 
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className='block text-sm font-medium text-gray-700 mb-2'>{t('About')} (Sinhala)</label>
+                    <div className='w-full'>
+                      <RichTextEditor 
+                        value={data.about_si} 
+                        onChange={(value) => onEditorChange(value, 'about_si')}
+                        placeholder={t('Write about yourself here...')}
+                      />
+                    </div>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className='block text-sm font-medium text-gray-700 mb-2'>{t('Address')} (Sinhala)</label>
+                    <textarea 
+                      name='address_si' 
+                      onChange={onChangeHandler} 
+                      value={data.address_si} 
                       className='w-full px-4 py-2.5 text-gray-900 border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors' 
                       rows="3"
                       placeholder={t('Address')} 

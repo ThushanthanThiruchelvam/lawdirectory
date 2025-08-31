@@ -19,6 +19,8 @@ const Page = () => {
     description_en: "",
     title_ta: "",
     description_ta: "",
+    title_si: "",
+    description_si: "",
     category: "News",
   })
 
@@ -42,6 +44,8 @@ const Page = () => {
       formData.append('description_en', data.description_en);
       formData.append('title_ta', data.title_ta);
       formData.append('description_ta', data.description_ta);
+      formData.append('title_si', data.title_si);
+      formData.append('description_si', data.description_si);
       formData.append('category', data.category);
       
       if (image) {
@@ -63,6 +67,8 @@ const Page = () => {
           description_en: "",
           title_ta: "",
           description_ta: "",
+          title_si: "",
+          description_si: "",
           category: "News",
         });
         setImage(null);
@@ -82,22 +88,22 @@ const Page = () => {
       <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Create New Blog Post</h1>
-            <p className="mt-2 text-sm text-gray-600">Add a new blog post in multiple languages</p>
+            <h1 className="text-3xl font-bold text-gray-900">{t('Create New Blog Post')}</h1>
+            <p className="mt-2 text-sm text-gray-600">{t('Add a new blog post in multiple languages')}</p>
           </div>
           
           <form onSubmit={onSubmitHandler} className="bg-white shadow-sm rounded-lg p-6">
             {/* Image Upload */}
             <div className="mb-8">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Thumbnail Image</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('Thumbnail Image')}</label>
               <label htmlFor="image" className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
                 {!image ? (
                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
                     <svg className="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                     </svg>
-                    <p className="mb-2 text-sm text-gray-500">Click to upload thumbnail</p>
-                    <p className="text-xs text-gray-500">PNG, JPG, JPEG (Max 5MB)</p>
+                    <p className="mb-2 text-sm text-gray-500">{t('Click to upload thumbnail')}</p>
+                    <p className="text-xs text-gray-500">{t('PNG, JPG, JPEG (Max 5MB)')}</p>
                   </div>
                 ) : (
                   <div className="relative w-full h-full flex items-center justify-center p-2">
@@ -131,7 +137,7 @@ const Page = () => {
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
-                  English Content
+                  {t('English Content')}
                 </button>
                 <button
                   type="button"
@@ -142,7 +148,18 @@ const Page = () => {
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
-                  Tamil Content
+                  {t('Tamil Content')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('si')}
+                  className={`py-4 px-1 text-sm font-medium border-b-2 whitespace-nowrap ${
+                    activeTab === 'si'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  {t('Sinhala Content')}
                 </button>
               </nav>
             </div>
@@ -152,7 +169,7 @@ const Page = () => {
               <div className="space-y-6">
                 <div>
                   <label htmlFor="title_en" className="block text-sm font-medium text-gray-700 mb-2">
-                    Blog Title (English)
+                    {t('Blog Title')} ({t('English')}) *
                   </label>
                   <input
                     id="title_en"
@@ -160,20 +177,20 @@ const Page = () => {
                     value={data.title_en}
                     onChange={onChangeHandler}
                     className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter blog title in English"
+                    placeholder={t('Enter blog title in English')}
                     required
                   />
                 </div>
                 
                 <div>
                   <label htmlFor="description_en" className="block text-sm font-medium text-gray-700 mb-2">
-                    Blog Content (English)
+                    {t('Blog Content')} ({t('English')}) *
                   </label>
                   <div className="border border-gray-300 rounded-md overflow-hidden">
                     <RichTextEditor 
                       value={data.description_en} 
                       onChange={(value) => onEditorChange(value, 'en')}
-                      placeholder="Write your blog content in English..."
+                      placeholder={t('Write your blog content in English...')}
                     />
                   </div>
                 </div>
@@ -185,7 +202,7 @@ const Page = () => {
               <div className="space-y-6">
                 <div>
                   <label htmlFor="title_ta" className="block text-sm font-medium text-gray-700 mb-2">
-                    Blog Title (Tamil)
+                    {t('Blog Title')} ({t('Tamil')})
                   </label>
                   <input
                     id="title_ta"
@@ -193,19 +210,51 @@ const Page = () => {
                     value={data.title_ta}
                     onChange={onChangeHandler}
                     className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter blog title in Tamil"
+                    placeholder={t('Enter blog title in Tamil')}
                   />
                 </div>
                 
                 <div>
                   <label htmlFor="description_ta" className="block text-sm font-medium text-gray-700 mb-2">
-                    Blog Content (Tamil)
+                    {t('Blog Content')} ({t('Tamil')})
                   </label>
                   <div className="border border-gray-300 rounded-md overflow-hidden">
                     <RichTextEditor 
                       value={data.description_ta} 
                       onChange={(value) => onEditorChange(value, 'ta')}
-                      placeholder="Write your blog content in Tamil..."
+                      placeholder={t('Write your blog content in Tamil...')}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Sinhala Content */}
+            {activeTab === 'si' && (
+              <div className="space-y-6">
+                <div>
+                  <label htmlFor="title_si" className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('Blog Title')} ({t('Sinhala')})
+                  </label>
+                  <input
+                    id="title_si"
+                    name="title_si"
+                    value={data.title_si}
+                    onChange={onChangeHandler}
+                    className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    placeholder={t('Enter blog title in Sinhala')}
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="description_si" className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('Blog Content')} ({t('Sinhala')})
+                  </label>
+                  <div className="border border-gray-300 rounded-md overflow-hidden">
+                    <RichTextEditor 
+                      value={data.description_si} 
+                      onChange={(value) => onEditorChange(value, 'si')}
+                      placeholder={t('Write your blog content in Sinhala...')}
                     />
                   </div>
                 </div>
@@ -215,7 +264,7 @@ const Page = () => {
             {/* Category Selection */}
             <div className="mt-8">
               <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
-                Category
+                {t('Category')}
               </label>
               <select
                 id="category"
@@ -224,8 +273,8 @@ const Page = () => {
                 onChange={onChangeHandler}
                 className="block w-64 px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="News">News</option>
-                <option value="Blog">Blog</option>
+                <option value="News">{t('News')}</option>
+                <option value="Blog">{t('Blog')}</option>
               </select>
             </div>
             
@@ -236,7 +285,7 @@ const Page = () => {
                 disabled={loading}
                 className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Publishing...' : 'Publish Blog Post'}
+                {loading ? t('Publishing...') : t('Publish Blog Post')}
               </button>
             </div>
           </form>

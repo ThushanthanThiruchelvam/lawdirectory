@@ -1,4 +1,3 @@
-
 import mongoose from "mongoose";
 import { ConnectDB } from "@/lib/config/db";
 import BlogModel from "@/lib/models/BlogModel";
@@ -30,9 +29,11 @@ export async function GET(request) {
           );
         }
         
-        // Find content in the requested language, fallback to English
+        // Find content in the requested language with fallbacks
         const content = blog.contents.find(c => c.language === lang) || 
                        blog.contents.find(c => c.language === 'en') ||
+                       blog.contents.find(c => c.language === 'si') || // Sinhala fallback
+                       blog.contents.find(c => c.language === 'ta') || // Tamil fallback
                        blog.contents[0]; // Fallback to first available
         
         // Return blog with content in the requested language
@@ -57,10 +58,12 @@ export async function GET(request) {
       // Fetch all blogs (for listing) - Return only requested language
       const blogs = await BlogModel.find({}).sort({ date: -1 });
       
-      // Map to include only the requested language content
+      // Map to include only the requested language content with fallbacks
       const blogsWithLang = blogs.map(blog => {
         const content = blog.contents.find(c => c.language === lang) || 
-                       blog.contents.find(c => c.language === 'en');
+                       blog.contents.find(c => c.language === 'en') ||
+                       blog.contents.find(c => c.language === 'si') || // Sinhala fallback
+                       blog.contents.find(c => c.language === 'ta');   // Tamil fallback
         
         return {
           _id: blog._id,
@@ -82,17 +85,20 @@ export async function GET(request) {
     );
   }
 }
+
 export async function POST(request) {
   try {
     await connectToDB();
 
     const formData = await request.formData();
     
-    // Get form data for both languages
+    // Get form data for all languages
     const title_en = formData.get('title_en');
     const description_en = formData.get('description_en');
     const title_ta = formData.get('title_ta');
     const description_ta = formData.get('description_ta');
+    const title_si = formData.get('title_si');
+    const description_si = formData.get('description_si');
     const category = formData.get('category');
     const imageFile = formData.get('image');
 
@@ -144,6 +150,15 @@ export async function POST(request) {
       });
     }
 
+    // Add Sinhala content if provided
+    if (title_si && description_si) {
+      blogData.contents.push({
+        language: 'si',
+        title: title_si,
+        description: description_si
+      });
+    }
+
     const newBlog = await BlogModel.create(blogData);
     console.log("Blog Saved Successfully");
 
@@ -162,64 +177,6 @@ export async function POST(request) {
   }
 }
 
-// Similarly update PUT and DELETE methods to handle multilingual content
-// ... (rest of your existing code with similar modifications)
-export async function DELETE(request) {
-  try {
-    await connectToDB();
-
-    const { searchParams } = new URL(request.url);
-    const blogId = searchParams.get('id');
-
-    if (!blogId) {
-      return NextResponse.json(
-        { success: false, error: "Blog ID is required" },
-        { status: 400 }
-      );
-    }
-
-    // Find the blog first to get the image URL for cleanup
-    const blog = await BlogModel.findById(blogId);
-    
-    if (!blog) {
-      return NextResponse.json(
-        { success: false, error: "Blog not found" },
-        { status: 404 }
-      );
-    }
-
-    // Delete the image from Cloudinary if it exists
-    if (blog.image) {
-      try {
-        const publicId = extractPublicIdFromUrl(blog.image);
-        await deleteFromCloudinary(publicId);
-        console.log(`Deleted image from Cloudinary: ${publicId}`);
-      } catch (cloudinaryError) {
-        console.error("Failed to delete image from Cloudinary:", cloudinaryError);
-        // Continue with database deletion even if Cloudinary deletion fails
-      }
-    }
-
-    // Delete the blog from database
-    await BlogModel.findByIdAndDelete(blogId);
-
-    return NextResponse.json({
-      success: true,
-      msg: "Blog deleted successfully"
-    });
-
-  } catch (error) {
-    console.error("DELETE Error:", error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error.message || "Failed to delete blog" 
-      },
-      { status: 500 }
-    );
-  }
-}
-// pages/api/blog.js - Complete PUT method
 export async function PUT(request) {
   try {
     await connectToDB();
@@ -236,11 +193,13 @@ export async function PUT(request) {
 
     const formData = await request.formData();
     
-    // Get form data for both languages
+    // Get form data for all languages
     const title_en = formData.get('title_en');
     const description_en = formData.get('description_en');
     const title_ta = formData.get('title_ta');
     const description_ta = formData.get('description_ta');
+    const title_si = formData.get('title_si');
+    const description_si = formData.get('description_si');
     const category = formData.get('category');
     const imageFile = formData.get('image');
 
@@ -301,6 +260,15 @@ export async function PUT(request) {
       });
     }
 
+    // Add Sinhala content if provided
+    if (title_si && description_si) {
+      updateData.contents.push({
+        language: 'si',
+        title: title_si,
+        description: description_si
+      });
+    }
+
     const updatedBlog = await BlogModel.findByIdAndUpdate(
       blogId,
       updateData,
@@ -317,6 +285,62 @@ export async function PUT(request) {
     console.error("PUT Error:", error);
     return NextResponse.json(
       { success: false, error: error.message || "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request) {
+  try {
+    await connectToDB();
+
+    const { searchParams } = new URL(request.url);
+    const blogId = searchParams.get('id');
+
+    if (!blogId) {
+      return NextResponse.json(
+        { success: false, error: "Blog ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Find the blog first to get the image URL for cleanup
+    const blog = await BlogModel.findById(blogId);
+    
+    if (!blog) {
+      return NextResponse.json(
+        { success: false, error: "Blog not found" },
+        { status: 404 }
+      );
+    }
+
+    // Delete the image from Cloudinary if it exists
+    if (blog.image) {
+      try {
+        const publicId = extractPublicIdFromUrl(blog.image);
+        await deleteFromCloudinary(publicId);
+        console.log(`Deleted image from Cloudinary: ${publicId}`);
+      } catch (cloudinaryError) {
+        console.error("Failed to delete image from Cloudinary:", cloudinaryError);
+        // Continue with database deletion even if Cloudinary deletion fails
+      }
+    }
+
+    // Delete the blog from database
+    await BlogModel.findByIdAndDelete(blogId);
+
+    return NextResponse.json({
+      success: true,
+      msg: "Blog deleted successfully"
+    });
+
+  } catch (error) {
+    console.error("DELETE Error:", error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: error.message || "Failed to delete blog" 
+      },
       { status: 500 }
     );
   }

@@ -20,6 +20,8 @@ const ServicesPage = () => {
     description_en: "",
     title_ta: "",
     description_ta: "",
+    title_si: "",
+    description_si: "",
     order: 0,
     isActive: true
   });
@@ -54,6 +56,8 @@ const ServicesPage = () => {
       description_en: "",
       title_ta: "",
       description_ta: "",
+      title_si: "",
+      description_si: "",
       order: 0,
       isActive: true
     });
@@ -72,6 +76,8 @@ const ServicesPage = () => {
       formDataToSend.append('description_en', formData.description_en);
       formDataToSend.append('title_ta', formData.title_ta);
       formDataToSend.append('description_ta', formData.description_ta);
+      formDataToSend.append('title_si', formData.title_si);
+      formDataToSend.append('description_si', formData.description_si);
       formDataToSend.append('order', formData.order);
       formDataToSend.append('isActive', formData.isActive);
       
@@ -110,45 +116,55 @@ const ServicesPage = () => {
   }
 
   const handleEdit = (service) => {
-    // For editing, we need to fetch the full service data with both languages
-    axios.get(`/api/services?id=${service._id}&lang=en`)
-      .then(responseEn => {
-        axios.get(`/api/services?id=${service._id}&lang=ta`)
-          .then(responseTa => {
-            const serviceEn = responseEn.data.service;
-            const serviceTa = responseTa.data.service;
-            
-            setFormData({
-              title_en: serviceEn?.title || "",
-              description_en: serviceEn?.description || "",
-              title_ta: serviceTa?.title || "",
-              description_ta: serviceTa?.description || "",
-              order: service.order || 0,
-              isActive: service.isActive !== undefined ? service.isActive : true
-            });
-            
-            setEditingService(service);
-            setShowAddForm(true);
-          })
-          .catch(error => {
-            console.error('Error fetching Tamil content:', error);
-            // Fallback to English only
-            setFormData({
-              title_en: serviceEn?.title || "",
-              description_en: serviceEn?.description || "",
-              title_ta: "",
-              description_ta: "",
-              order: service.order || 0,
-              isActive: service.isActive !== undefined ? service.isActive : true
-            });
-            setEditingService(service);
-            setShowAddForm(true);
-          });
-      })
-      .catch(error => {
-        console.error('Error fetching service:', error);
-        toast.error(t('Failed to load service data'));
+    // For editing, we need to fetch the full service data with all languages
+    Promise.all([
+      axios.get(`/api/services?id=${service._id}&lang=en`),
+      axios.get(`/api/services?id=${service._id}&lang=ta`),
+      axios.get(`/api/services?id=${service._id}&lang=si`)
+    ])
+    .then(([responseEn, responseTa, responseSi]) => {
+      const serviceEn = responseEn.data.service;
+      const serviceTa = responseTa.data.service;
+      const serviceSi = responseSi.data.service;
+      
+      setFormData({
+        title_en: serviceEn?.title || "",
+        description_en: serviceEn?.description || "",
+        title_ta: serviceTa?.title || "",
+        description_ta: serviceTa?.description || "",
+        title_si: serviceSi?.title || "",
+        description_si: serviceSi?.description || "",
+        order: service.order || 0,
+        isActive: service.isActive !== undefined ? service.isActive : true
       });
+      
+      setEditingService(service);
+      setShowAddForm(true);
+    })
+    .catch(error => {
+      console.error('Error fetching service content:', error);
+      // Fallback to English only
+      axios.get(`/api/services?id=${service._id}&lang=en`)
+        .then(responseEn => {
+          const serviceEn = responseEn.data.service;
+          setFormData({
+            title_en: serviceEn?.title || "",
+            description_en: serviceEn?.description || "",
+            title_ta: "",
+            description_ta: "",
+            title_si: "",
+            description_si: "",
+            order: service.order || 0,
+            isActive: service.isActive !== undefined ? service.isActive : true
+          });
+          setEditingService(service);
+          setShowAddForm(true);
+        })
+        .catch(error => {
+          console.error('Error fetching service:', error);
+          toast.error(t('Failed to load service data'));
+        });
+    });
   };
 
   const handleDelete = async (serviceId) => {
@@ -224,7 +240,7 @@ const ServicesPage = () => {
               </h2>
               
               <form onSubmit={onSubmitHandler} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                   <div className="space-y-4">
                     <h3 className='text-base font-medium text-gray-700 border-b pb-2'>English Content</h3>
                     <div>
@@ -283,6 +299,36 @@ const ServicesPage = () => {
                         className='w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-800 focus:border-transparent' 
                         rows="3"
                         placeholder={t('Service description in Tamil')} 
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <h3 className='text-base font-medium text-gray-700 border-b pb-2'>Sinhala Content</h3>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {t('Title')} (Sinhala)
+                      </label>
+                      <input 
+                        name='title_si' 
+                        onChange={onChangeHandler} 
+                        value={formData.title_si} 
+                        className='w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-800 focus:border-transparent' 
+                        type="text" 
+                        placeholder={t('Service title in Sinhala')} 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {t('Description')} (Sinhala)
+                      </label>
+                      <textarea 
+                        name='description_si' 
+                        onChange={onChangeHandler} 
+                        value={formData.description_si} 
+                        className='w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-800 focus:border-transparent' 
+                        rows="3"
+                        placeholder={t('Service description in Sinhala')} 
                       />
                     </div>
                   </div>

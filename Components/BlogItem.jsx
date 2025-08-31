@@ -25,8 +25,8 @@ const BlogItem = ({ title, description, category, image, id }) => {
   
   const translateCategory = (cat) => {
     switch(cat) {
-      case 'News': return t('News');
-      case 'Blog': return t('Blog');
+      case 'News': return t('News', 'News');
+      case 'Blog': return t('Blog', 'Blog');
       default: return cat;
     }
   };
@@ -56,7 +56,7 @@ const BlogItem = ({ title, description, category, image, id }) => {
           href={`/blogs/${id}?lang=${i18n.language}`} 
           className='inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors'
         >
-          {t('Read more')}
+          {t('Read more', 'Read more')}
           <svg className="w-3 h-3 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
           </svg>
