@@ -1,3 +1,4 @@
+// Components/ProtectedRoute.js
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,7 +23,7 @@ export default function ProtectedRoute({ children }) {
       
       // If authenticated and trying to access login page
       if (isAuthenticated && pathname === '/admin/login') {
-        router.push('/admin/add-blog');
+        router.push('/admin/profile');
         return;
       }
     }

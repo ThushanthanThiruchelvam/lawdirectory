@@ -1,7 +1,6 @@
-'use client'
+'use client';
 
 import Sidebar from "@/Components/AdminComponents/Sidebar";
-
 import { ToastContainer } from 'react-toastify';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePathname } from 'next/navigation';
@@ -26,7 +25,7 @@ export default function Layout({ children }) {
     );
   }
 
-  // If not authenticated, don't render the admin layout
+  // If not authenticated, redirect to login (handled by ProtectedRoute)
   if (!isAuthenticated) {
     return null;
   }
@@ -42,15 +41,15 @@ export default function Layout({ children }) {
             <div className="flex items-center gap-4">
               {/* Language Selector */}
               <div className="relative">
-<select 
-  value={i18n.language} 
-  onChange={(e) => changeLanguage(e.target.value)}
-  className="px-6 py-1 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent appearance-none cursor-pointer transition-colors duration-200"
->
-  <option value="en">EN</option>
-  <option value="ta">TA</option>
-  <option value="si">SI</option> {/* Add Sinhala */}
-</select>
+                <select 
+                  value={i18n.language} 
+                  onChange={(e) => changeLanguage(e.target.value)}
+                  className="px-6 py-1 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent appearance-none cursor-pointer transition-colors duration-200"
+                >
+                  <option value="en">EN</option>
+                  <option value="ta">TA</option>
+                  <option value="si">SI</option>
+                </select>
               </div>
               
               <button 

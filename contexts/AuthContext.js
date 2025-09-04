@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
 const AuthContext = createContext();
 
@@ -13,6 +14,7 @@ export function AuthProvider({ children }) {
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -21,15 +23,9 @@ export function AuthProvider({ children }) {
       
       if (token && adminData) {
         try {
-          // Verify token is still valid by making a simple API call
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          
-          // Optional: You can add a token validation API endpoint
-          // const response = await axios.get('/api/admin/validate');
-          
           setAdmin(JSON.parse(adminData));
         } catch (error) {
-          // Token is invalid, clear storage
           localStorage.removeItem('adminData');
           localStorage.removeItem('adminToken');
           delete axios.defaults.headers.common['Authorization'];
@@ -70,6 +66,9 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('adminData');
     localStorage.removeItem('adminToken');
     delete axios.defaults.headers.common['Authorization'];
+    
+    // Redirect to home page after logout
+    router.push('/');
   };
 
   const value = {
