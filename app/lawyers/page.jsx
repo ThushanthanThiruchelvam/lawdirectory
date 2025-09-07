@@ -7,7 +7,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Search, X, MapPin, Briefcase, Filter } from 'lucide-react'
+import { Search, X, MapPin, Briefcase, Filter, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const Page = () => {
   const [lawyers, setLawyers] = useState([])
@@ -19,6 +19,10 @@ const Page = () => {
   const [allLocations, setAllLocations] = useState([])
   const [allPracticeAreas, setAllPracticeAreas] = useState([])
   const [showFilters, setShowFilters] = useState(false)
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(9) // Default items per page
   
   // Header state
   const [menu, setMenu] = useState('')
@@ -105,15 +109,54 @@ const Page = () => {
     }
     
     setFilteredLawyers(results)
+    setCurrentPage(1) // Reset to first page when filters change
   }, [searchTerm, locationFilter, practiceAreaFilter, lawyers])
+
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage
+  const currentItems = filteredLawyers.slice(indexOfFirstItem, indexOfLastItem)
+  const totalPages = Math.ceil(filteredLawyers.length / itemsPerPage)
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber)
 
   const clearFilters = () => {
     setSearchTerm('')
     setLocationFilter('')
     setPracticeAreaFilter('')
+    setCurrentPage(1)
   }
 
   const hasActiveFilters = searchTerm || locationFilter || practiceAreaFilter
+
+  // Generate page numbers for pagination
+  const pageNumbers = []
+  for (let i = 1; i <= totalPages; i++) {
+    pageNumbers.push(i)
+  }
+
+  // Determine which page numbers to show (with ellipsis for many pages)
+  const getDisplayedPages = () => {
+    const maxVisiblePages = 5
+    if (totalPages <= maxVisiblePages) {
+      return pageNumbers
+    }
+    
+    const half = Math.floor(maxVisiblePages / 2)
+    let start = Math.max(currentPage - half, 1)
+    let end = Math.min(start + maxVisiblePages - 1, totalPages)
+    
+    if (end - start < maxVisiblePages - 1) {
+      start = Math.max(end - maxVisiblePages + 1, 1)
+    }
+    
+    const pages = []
+    for (let i = start; i <= end; i++) {
+      pages.push(i)
+    }
+    
+    return pages
+  }
 
   if (loading) {
     return (
@@ -140,6 +183,7 @@ const Page = () => {
               >
                 <option value="en">EN</option>
                 <option value="ta">TA</option>
+                <option value="si">SI</option>
               </select>
               
               <button 
@@ -215,13 +259,13 @@ const Page = () => {
             >
               {t('Lawyers')}
             </Link>
-            <Link 
+            {/* <Link 
               href='/#blog' 
               className={`font-medium text-sm tracking-wide transition-colors ${menu === 'blog' ? 'text-blue-600' : 'text-gray-600 hover:text-blue-500'}`}
               onClick={() => setMenu('blog')}
             >
               {t('Blog')}
-            </Link>
+            </Link> */}
             <Link 
               href='/#contact' 
               className={`font-medium text-sm tracking-wide transition-colors ${menu === 'contact' ? 'text-blue-600' : 'text-gray-600 hover:text-blue-500'}`}
@@ -240,6 +284,7 @@ const Page = () => {
             >
               <option value="en">EN</option>
               <option value="ta">TA</option>
+              <option value="si">SI</option>
             </select>
             
             {/* Mobile Menu Button */}
@@ -288,13 +333,13 @@ const Page = () => {
             >
               {t('Lawyers')}
             </Link>
-            <Link 
+            {/* <Link 
               href='/#blog' 
               className='font-medium text-gray-700 hover:text-blue-600 py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors'
               onClick={() => {setMenu('blog'); setIsMenuOpen(false);}}
             >
               {t('Blog')}
-            </Link>
+            </Link> */}
             <Link 
               href='/#contact' 
               className='font-medium text-gray-700 hover:text-blue-600 py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors'
@@ -396,72 +441,164 @@ const Page = () => {
             )}
           </div>
 
-          {/* Results Count */}
-          <div className="flex items-center justify-between mb-6">
+          {/* Results Count and Items Per Page Selector */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
             <h2 className="text-xl font-light text-gray-900">
               {filteredLawyers.length} {filteredLawyers.length === 1 ? t('Expert') : t('Experts')} {t('Available')}
             </h2>
-            {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="flex items-center text-sm text-gray-500 hover:text-gray-700"
-              >
-                <X size={14} className="mr-1" />
-                {t('Clear filters')}
-              </button>
-            )}
+            
+            <div className="flex items-center gap-4">
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="flex items-center text-sm text-gray-500 hover:text-gray-700"
+                >
+                  <X size={14} className="mr-1" />
+                  {t('Clear filters')}
+                </button>
+              )}
+              
+              <div className="flex items-center text-sm text-gray-700">
+                <label htmlFor="itemsPerPage" className="mr-2">{t('Show')}</label>
+                <select
+                  id="itemsPerPage"
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value))
+                    setCurrentPage(1)
+                  }}
+                  className="px-2 py-1 border border-gray-200 rounded-md bg-white"
+                >
+                  <option value="6">6</option>
+                  <option value="9">9</option>
+                  <option value="12">12</option>
+                  <option value="15">15</option>
+                </select>
+                <span className="ml-2">{t('per page')}</span>
+              </div>
+            </div>
           </div>
           
           {/* Lawyers Grid */}
-          {filteredLawyers.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredLawyers.map((lawyer) => (
-                <div key={lawyer._id} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-sm transition-all duration-300">
-                  <div className="relative h-48 w-full">
-                    <Image
-                      src={lawyer.image}
-                      alt={lawyer.name}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="p-5">
-                    <h3 className="text-lg font-normal text-gray-900">{lawyer.name || t("No name available")}</h3>
-                    <p className="text-sm text-gray-500 mt-1">{lawyer.title || t("No title available")}</p>
-                    
-                    <div className="mt-4">
-                      <p className="text-sm text-gray-600 line-clamp-2">{lawyer.description || ""}</p>
+          {currentItems.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {currentItems.map((lawyer) => (
+                  <div key={lawyer._id} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-sm transition-all duration-300">
+                    <div className="relative h-48 w-full">
+                      <Image
+                        src={lawyer.image}
+                        alt={lawyer.name}
+                        fill
+                        className="object-cover"
+                      />
                     </div>
-                    
-                    {lawyer.locations && lawyer.locations.length > 0 && (
-                      <div className="mt-4 flex items-center text-sm text-gray-500">
-                        <MapPin size={14} className="mr-1.5" />
-                        <span className="line-clamp-1">{lawyer.locations.join(', ')}</span>
+                    <div className="p-5">
+                      <h3 className="text-lg font-normal text-gray-900">{lawyer.name || t("No name available")}</h3>
+                      <p className="text-sm text-gray-500 mt-1">{lawyer.title || t("No title available")}</p>
+                      
+                      <div className="mt-4">
+                        <p className="text-sm text-gray-600 line-clamp-2">{lawyer.description || ""}</p>
                       </div>
+                      
+                      {lawyer.locations && lawyer.locations.length > 0 && (
+                        <div className="mt-4 flex items-center text-sm text-gray-500">
+                          <MapPin size={14} className="mr-1.5" />
+                          <span className="line-clamp-1">{lawyer.locations.join(', ')}</span>
+                        </div>
+                      )}
+                      
+                      {lawyer.practiceAreas && lawyer.practiceAreas.length > 0 && (
+                        <div className="mt-2 flex items-center text-sm text-gray-500">
+                          <Briefcase size={14} className="mr-1.5" />
+                          <span className="line-clamp-1">{lawyer.practiceAreas.join(', ')}</span>
+                        </div>
+                      )}
+                      
+                      <div className="mt-5 pt-4 border-t border-gray-100">
+                        <Link
+                          href={`/lawyers/${lawyer.slug}`}
+                          className="inline-flex items-center text-sm text-gray-700 hover:text-gray-900 transition-colors hover:underline"
+                        >
+                          {t('View Profile')}
+                          <svg className="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                          </svg>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex justify-center items-center mt-8 mb-12">
+                  <nav className="flex items-center gap-1">
+                    {/* Previous Button */}
+                    <button
+                      onClick={() => paginate(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                      className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      aria-label="Previous page"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    
+                    {/* First Page */}
+                    {getDisplayedPages()[0] > 1 && (
+                      <>
+                        <button
+                          onClick={() => paginate(1)}
+                          className={`w-10 h-10 rounded-lg border flex items-center justify-center text-sm ${currentPage === 1 ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+                        >
+                          1
+                        </button>
+                        {getDisplayedPages()[0] > 2 && (
+                          <span className="px-2 text-gray-500">...</span>
+                        )}
+                      </>
                     )}
                     
-                    {lawyer.practiceAreas && lawyer.practiceAreas.length > 0 && (
-                      <div className="mt-2 flex items-center text-sm text-gray-500">
-                        <Briefcase size={14} className="mr-1.5" />
-                        <span className="line-clamp-1">{lawyer.practiceAreas.join(', ')}</span>
-                      </div>
-                    )}
-                    
-                    <div className="mt-5 pt-4 border-t border-gray-100">
-                      <Link
-                        href={`/lawyers/${lawyer.slug}`}
-                        className="inline-flex items-center text-sm text-gray-700 hover:text-gray-900 transition-colors hover:underline"
+                    {/* Page Numbers */}
+                    {getDisplayedPages().map((number) => (
+                      <button
+                        key={number}
+                        onClick={() => paginate(number)}
+                        className={`w-10 h-10 rounded-lg border flex items-center justify-center text-sm ${currentPage === number ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}
                       >
-                        {t('View Profile')}
-                        <svg className="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                      </Link>
-                    </div>
-                  </div>
+                        {number}
+                      </button>
+                    ))}
+                    
+                    {/* Last Page */}
+                    {getDisplayedPages()[getDisplayedPages().length - 1] < totalPages && (
+                      <>
+                        {getDisplayedPages()[getDisplayedPages().length - 1] < totalPages - 1 && (
+                          <span className="px-2 text-gray-500">...</span>
+                        )}
+                        <button
+                          onClick={() => paginate(totalPages)}
+                          className={`w-10 h-10 rounded-lg border flex items-center justify-center text-sm ${currentPage === totalPages ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+                        >
+                          {totalPages}
+                        </button>
+                      </>
+                    )}
+                    
+                    {/* Next Button */}
+                    <button
+                      onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
+                      disabled={currentPage === totalPages}
+                      className="p-2 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      aria-label="Next page"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </nav>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           ) : (
             <div className="text-center py-16 bg-gray-50 rounded-xl">
               <Search size={48} className="mx-auto text-gray-300 mb-4" />

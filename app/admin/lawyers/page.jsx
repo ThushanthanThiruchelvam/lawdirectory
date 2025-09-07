@@ -10,11 +10,19 @@ import Link from 'next/link';
 const Page = () => {
   const [lawyers, setLawyers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalLawyers, setTotalLawyers] = useState(0);
+  const itemsPerPage = 10; // Number of items per page
   
-  const fetchLawyers = async () => {
+  const fetchLawyers = async (page = 1) => {
     try {
-      const response = await axios.get('/api/lawyers?admin=true');
+      setLoading(true);
+      const response = await axios.get(`/api/lawyers?admin=true&page=${page}&limit=${itemsPerPage}`);
       setLawyers(response.data.lawyers);
+      setTotalPages(response.data.totalPages);
+      setTotalLawyers(response.data.totalLawyers);
+      setCurrentPage(page);
     } catch (error) {
       console.error('Error fetching lawyers:', error);
       toast.error('Failed to fetch lawyers');
@@ -30,7 +38,7 @@ const Page = () => {
       const response = await axios.delete(`/api/lawyers?id=${lawyerId}`);
       if (response.data.success) {
         toast.success(response.data.msg);
-        fetchLawyers(); // Refresh the list
+        fetchLawyers(currentPage); // Refresh the current page
       } else {
         toast.error(response.data.error);
       }
@@ -49,7 +57,7 @@ const Page = () => {
       
       if (response.data.success) {
         toast.success('Featured status updated');
-        fetchLawyers(); // Refresh the list
+        fetchLawyers(currentPage); // Refresh the current page
       }
     } catch (error) {
       console.error('Error toggling featured status:', error);
@@ -66,7 +74,7 @@ const Page = () => {
       
       if (response.data.success) {
         toast.success('Published status updated');
-        fetchLawyers(); // Refresh the list
+        fetchLawyers(currentPage); // Refresh the current page
       }
     } catch (error) {
       console.error('Error toggling published status:', error);
@@ -75,10 +83,30 @@ const Page = () => {
   }
 
   useEffect(() => {
-    fetchLawyers();
+    fetchLawyers(1);
   }, [])
 
-  if (loading) {
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    // Adjust if we're near the beginning
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    
+    return pages;
+  }
+
+  if (loading && lawyers.length === 0) {
     return (
       <ProtectedRoute>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -93,7 +121,12 @@ const Page = () => {
       <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Manage Lawyers</h1>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Manage Lawyers</h1>
+              <p className="text-sm text-gray-600 mt-1">
+                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalLawyers)} of {totalLawyers} lawyers
+              </p>
+            </div>
             <Link 
               href="/admin/add-lawyer"
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
@@ -222,6 +255,64 @@ const Page = () => {
                 </div>
               )}
             </div>
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm text-gray-700">
+                      Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-medium">
+                        {Math.min(currentPage * itemsPerPage, totalLawyers)}
+                      </span> of <span className="font-medium">{totalLawyers}</span> results
+                    </p>
+                  </div>
+                  <div>
+                    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                      <button
+                        onClick={() => fetchLawyers(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${
+                          currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                      >
+                        <span className="sr-only">Previous</span>
+                        <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                          <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                      
+                      {getPageNumbers().map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => fetchLawyers(page)}
+                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                            currentPage === page
+                              ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                              : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                      
+                      <button
+                        onClick={() => fetchLawyers(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${
+                          currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                      >
+                        <span className="sr-only">Next</span>
+                        <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    </nav>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

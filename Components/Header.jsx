@@ -12,7 +12,7 @@ const Header = () => {
   const [logo, setLogo] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
-  const [menu, setMenu] = useState(''); // Add missing menu state
+  const [menu, setMenu] = useState('');
 
   // Track when component is mounted on client
   useEffect(() => {
@@ -65,13 +65,16 @@ const Header = () => {
       <div className='flex justify-between items-center'>
         <Link href="/">
           {logo ? (
-            <Image 
-              src={logo} 
-              width={150} 
-              height={50} 
-              alt='Logo' 
-              className='w-auto h-10 object-contain'
-            />
+            <div className="w-40 h-30 flex items-center justify-center">
+              <Image 
+                src={logo} 
+                width={150} 
+                height={50} 
+                alt='Logo' 
+                className='w-auto h-full object-contain'
+                priority
+              />
+            </div>
           ) : (
             <div className="w-40 h-10 bg-gray-200 animate-pulse rounded"></div>
           )}
@@ -79,14 +82,25 @@ const Header = () => {
         
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8">
-          <Link href="/" className="text-gray-800 hover:text-gray-600 transition-colors">
-            {/* Only render text when on client to avoid hydration mismatch */}
+          <Link 
+            href="/" 
+            className={`font-medium text-sm tracking-wide transition-colors ${menu === 'home' ? 'text-blue-600' : 'text-gray-600 hover:text-blue-500'}`}
+            onClick={() => setMenu('home')}
+          >
             {isClient ? t('home', 'Home') : 'Home'}
           </Link>
-          <Link href="#about" className="text-gray-800 hover:text-gray-600 transition-colors">
+          <Link 
+            href="#about" 
+            className={`font-medium text-sm tracking-wide transition-colors ${menu === 'about' ? 'text-blue-600' : 'text-gray-600 hover:text-blue-500'}`}
+            onClick={() => setMenu('about')}
+          >
             {isClient ? t('about', 'About') : 'About'}
           </Link>
-          <Link href="#services" className="text-gray-800 hover:text-gray-600 transition-colors">
+          <Link 
+            href="#services" 
+            className={`font-medium text-sm tracking-wide transition-colors ${menu === 'services' ? 'text-blue-600' : 'text-gray-600 hover:text-blue-500'}`}
+            onClick={() => setMenu('services')}
+          >
             {isClient ? t('services', 'Services') : 'Services'}
           </Link>
           <Link 
@@ -96,14 +110,18 @@ const Header = () => {
           >
             {isClient ? t('Lawyers') : 'Lawyers'}
           </Link>
-          <Link 
+          {/* <Link 
             href='/#blog' 
             className={`font-medium text-sm tracking-wide transition-colors ${menu === 'blog' ? 'text-blue-600' : 'text-gray-600 hover:text-blue-500'}`}
             onClick={() => setMenu('blog')}
           >
             {isClient ? t('Blog') : 'Blog'}
-          </Link>
-          <Link href="#contact" className="text-gray-800 hover:text-gray-600 transition-colors">
+          </Link> */}
+          <Link 
+            href="#contact" 
+            className={`font-medium text-sm tracking-wide transition-colors ${menu === 'contact' ? 'text-blue-600' : 'text-gray-600 hover:text-blue-500'}`}
+            onClick={() => setMenu('contact')}
+          >
             {isClient ? t('contact', 'Contact') : 'Contact'}
           </Link>
         </nav>
