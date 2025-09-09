@@ -96,13 +96,13 @@ const LawyerProfilePage = () => {
               >
                 {t('Lawyers')}
               </Link>
-              <Link 
+              {/* <Link 
                 href="/#blog" 
                 className={`font-medium ${menu === 'blog' ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'}`}
                 onClick={() => setMenu('blog')}
               >
                 {t('Blog')}
-              </Link>
+              </Link> */}
               <Link 
                 href="/#contact" 
                 className={`font-medium ${menu === 'contact' ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'}`}
@@ -120,6 +120,7 @@ const LawyerProfilePage = () => {
               >
                 <option value="en">EN</option>
                 <option value="ta">TA</option>
+                <option value="si">SI</option>
               </select>
               
               {/* Mobile Menu Button */}
@@ -142,11 +143,11 @@ const LawyerProfilePage = () => {
                 <Link href="/#about" className="font-medium text-gray-70 hover:text-blue-600 py-2">About</Link>
                 <Link href="/#services" className="font-medium text-gray-700 hover:text-blue-600 py-2">Services</Link>
                 <Link href="/#lawyers" className="font-medium text-gray-700 hover:text-blue-600 py-2">Lawyers</Link>
-                <Link href="/#blog" className="font-medium text-gray-700 hover:text-blue-600 py-2">Blog</Link>
+                {/* <Link href="/#blog" className="font-medium text-gray-700 hover:text-blue-600 py-2">Blog</Link> */}
                 <Link href="/#contact" className="font-medium text-gray-700 hover:text-blue-600 py-2">Contact</Link>
-                <button className="text-sm font-medium py-2 px-4 border border-gray-800 rounded hover:bg-gray-800 hover:text-white transition-colors mt-4">
+                {/* <button className="text-sm font-medium py-2 px-4 border border-gray-800 rounded hover:bg-gray-800 hover:text-white transition-colors mt-4">
                   Get Started
-                </button>
+                </button> */}
               </div>
             </div>
           )}
@@ -207,13 +208,13 @@ const LawyerProfilePage = () => {
               >
                 {t('Lawyers')}
               </Link>
-              <Link 
+              {/* <Link 
                 href="/#blog" 
                 className={`font-medium ${menu === 'blog' ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'}`}
                 onClick={() => setMenu('blog')}
               >
                 {t('Blog')}
-              </Link>
+              </Link> */}
               <Link 
                 href="/#contact" 
                 className={`font-medium ${menu === 'contact' ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'}`}
@@ -231,6 +232,7 @@ const LawyerProfilePage = () => {
               >
                 <option value="en">EN</option>
                 <option value="ta">TA</option>
+                <option value="si">SI</option>
               </select>
               
               {/* Mobile Menu Button */}
@@ -253,11 +255,11 @@ const LawyerProfilePage = () => {
                 <Link href="/#about" className="font-medium text-gray-700 hover:text-blue-600 py-2">About</Link>
                 <Link href="/#services" className="font-medium text-gray-700 hover:text-blue-600 py-2">Services</Link>
                 <Link href="/#lawyers" className="font-medium text-gray-700 hover:text-blue-600 py-2">Lawyers</Link>
-                <Link href="/#blog" className="font-medium text-gray-700 hover:text-blue-600 py-2">Blog</Link>
+                {/* <Link href="/#blog" className="font-medium text-gray-700 hover:text-blue-600 py-2">Blog</Link> */}
                 <Link href="/#contact" className="font-medium text-gray-700 hover:text-blue-600 py-2">Contact</Link>
-                <button className="text-sm font-medium py-2 px-4 border border-gray-800 rounded hover:bg-gray-800 hover:text-white transition-colors mt-4">
+                {/* <button className="text-sm font-medium py-2 px-4 border border-gray-800 rounded hover:bg-gray-800 hover:text-white transition-colors mt-4">
                   Get Started
-                </button>
+                </button> */}
               </div>
             </div>
           )}
@@ -320,13 +322,13 @@ const LawyerProfilePage = () => {
             >
               {t('Lawyers')}
             </Link>
-            <Link 
+            {/* <Link 
               href="/#blog" 
               className={`font-medium ${menu === 'blog' ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'}`}
               onClick={() => setMenu('blog')}
             >
               {t('Blog')}
-            </Link>
+            </Link> */}
             <Link 
               href="/#contact" 
               className={`font-medium ${menu === 'contact' ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'}`}
@@ -344,11 +346,12 @@ const LawyerProfilePage = () => {
             >
               <option value="en">EN</option>
               <option value="ta">TA</option>
+              <option value="si">SI</option>
             </select>
             
-            <button className="hidden sm:block text-sm font-medium py-2 px-4 border border-gray-800 rounded hover:bg-gray-800 hover:text-white transition-colors">
+            {/* <button className="hidden sm:block text-sm font-medium py-2 px-4 border border-gray-800 rounded hover:bg-gray-800 hover:text-white transition-colors">
               {t('Get Started')}
-            </button>
+            </button> */}
 
             {/* Mobile Menu Button */}
             <button 
@@ -370,11 +373,11 @@ const LawyerProfilePage = () => {
               <Link href="/#about" className="font-medium text-gray-700 hover:text-blue-600 py-2">About</Link>
               <Link href="/#services" className="font-medium text-gray-700 hover:text-blue-600 py-2">Services</Link>
               <Link href="/#lawyers" className="font-medium text-gray-700 hover:text-blue-600 py-2">Lawyers</Link>
-              <Link href="/#blog" className="font-medium text-gray-700 hover:text-blue-600 py-2">Blog</Link>
+              {/* <Link href="/#blog" className="font-medium text-gray-700 hover:text-blue-600 py-2">Blog</Link> */}
               <Link href="/#contact" className="font-medium text-gray-700 hover:text-blue-600 py-2">Contact</Link>
-              <button className="text-sm font-medium py-2 px-4 border border-gray-800 rounded hover:bg-gray-800 hover:text-white transition-colors mt-4">
+              {/* <button className="text-sm font-medium py-2 px-4 border border-gray-800 rounded hover:bg-gray-800 hover:text-white transition-colors mt-4">
                 Get Started
-              </button>
+              </button> */}
             </div>
           </div>
         )}

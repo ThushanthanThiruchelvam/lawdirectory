@@ -8,24 +8,55 @@ import ProtectedRoute from '/components/ProtectedRoute'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 
+// Helper functions for translations
+const getPracticeAreaTranslations = () => {
+  return [
+    { en: 'Criminal Law', ta: 'குற்றவியல் சட்டம்', si: 'අපරාධ නීතිය' },
+    { en: 'Civil Law', ta: 'சிவில் சட்டம்', si: 'නාගරික නීතිය' },
+    { en: 'Corporate Law', ta: 'நிறுவன சட்டம்', si: 'ක cooperate නීතිය' },
+    { en: 'Family Law', ta: 'குடும்ப சட்டம்', si: 'පවුල් නීතිය' },
+    { en: 'Employment Law', ta: 'உட்படும் சட்டம்', si: 'රැකියා නීතිය' }
+  ];
+};
+
+const getLocationTranslations = () => {
+  return [
+    { en: 'Jaffna', ta: 'யாழ்ப்பாணம்', si: 'යාපනය' },
+    { en: 'Kilinochchi', ta: 'கிளிநொச்சி', si: 'කිලිනොච්චිය' },
+    { en: 'Vavuniya', ta: 'வவுனியா', si: 'වවුනියාව' },
+    { en: 'Mannar', ta: 'மன்னார்', si: 'මන්නාරම' },
+    { en: 'Mullaitivu', ta: 'முல்லைத்தீவு', si: 'මුලතිව්' }
+  ];
+};
+
 const EditLawyerPage = ({ params }) => {
   const [id, setId] = useState(null);
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('en');
-  const router = useRouter();
-  const { t, i18n } = useTranslation();
-  
-  const [locations_en, setLocations_en] = useState(['']);
-  const [locations_ta, setLocations_ta] = useState(['']);
-  const [practiceAreas_en, setPracticeAreas_en] = useState(['']);
-  const [practiceAreas_ta, setPracticeAreas_ta] = useState(['']);
+  const [selectedPracticeAreas, setSelectedPracticeAreas] = useState({
+    en: [],
+    ta: [],
+    si: []
+  });
+  const [selectedLocations, setSelectedLocations] = useState({
+    en: [],
+    ta: [],
+    si: []
+  });
   const [education_en, setEducation_en] = useState(['']);
   const [education_ta, setEducation_ta] = useState(['']);
+  const [education_si, setEducation_si] = useState(['']);
   const [addresses_en, setAddresses_en] = useState(['']);
   const [addresses_ta, setAddresses_ta] = useState(['']);
+  const [addresses_si, setAddresses_si] = useState(['']);
   const [currentImage, setCurrentImage] = useState('');
+  const router = useRouter();
+  const { t } = useTranslation();
+  
+  const practiceAreaOptions = getPracticeAreaTranslations();
+  const locationOptions = getLocationTranslations();
 
   const [data, setData] = useState({
     lawyerId: "",
@@ -40,6 +71,9 @@ const EditLawyerPage = ({ params }) => {
     name_ta: "",
     title_ta: "",
     description_ta: "",
+    name_si: "",
+    title_si: "",
+    description_si: "",
   })
 
   useEffect(() => {
@@ -84,17 +118,32 @@ const EditLawyerPage = ({ params }) => {
           name_ta: lawyer.name_ta || "",
           title_ta: lawyer.title_ta || "",
           description_ta: lawyer.description_ta || "",
+          name_si: lawyer.name_si || "",
+          title_si: lawyer.title_si || "",
+          description_si: lawyer.description_si || "",
+        });
+        
+        // Set selected practice areas from API response
+        setSelectedPracticeAreas({
+          en: lawyer.practiceAreas_en || [],
+          ta: lawyer.practiceAreas_ta || [],
+          si: lawyer.practiceAreas_si || []
+        });
+        
+        // Set selected locations from API response
+        setSelectedLocations({
+          en: lawyer.locations_en || [],
+          ta: lawyer.locations_ta || [],
+          si: lawyer.locations_si || []
         });
         
         // Set arrays from API response
-        setLocations_en(lawyer.locations_en && lawyer.locations_en.length > 0 ? lawyer.locations_en : ['']);
-        setLocations_ta(lawyer.locations_ta && lawyer.locations_ta.length > 0 ? lawyer.locations_ta : ['']);
-        setPracticeAreas_en(lawyer.practiceAreas_en && lawyer.practiceAreas_en.length > 0 ? lawyer.practiceAreas_en : ['']);
-        setPracticeAreas_ta(lawyer.practiceAreas_ta && lawyer.practiceAreas_ta.length > 0 ? lawyer.practiceAreas_ta : ['']);
         setEducation_en(lawyer.education_en && lawyer.education_en.length > 0 ? lawyer.education_en : ['']);
         setEducation_ta(lawyer.education_ta && lawyer.education_ta.length > 0 ? lawyer.education_ta : ['']);
+        setEducation_si(lawyer.education_si && lawyer.education_si.length > 0 ? lawyer.education_si : ['']);
         setAddresses_en(lawyer.addresses_en && lawyer.addresses_en.length > 0 ? lawyer.addresses_en : ['']);
         setAddresses_ta(lawyer.addresses_ta && lawyer.addresses_ta.length > 0 ? lawyer.addresses_ta : ['']);
+        setAddresses_si(lawyer.addresses_si && lawyer.addresses_si.length > 0 ? lawyer.addresses_si : ['']);
         
         // Set current image
         setCurrentImage(lawyer.image || '');
@@ -117,76 +166,54 @@ const EditLawyerPage = ({ params }) => {
     setData(data => ({ ...data, [name]: value }));
   }
 
-  // Functions to handle multilingual arrays
-  const addLocation = (language) => {
-    if (language === 'en') {
-      setLocations_en([...locations_en, '']);
-    } else {
-      setLocations_ta([...locations_ta, '']);
-    }
-  }
-
-  const removeLocation = (index, language) => {
-    if (language === 'en') {
-      if (locations_en.length > 1) {
-        setLocations_en(locations_en.filter((_, i) => i !== index));
+  // Practice Area Selection Handlers
+  const handlePracticeAreaChange = (language, value) => {
+    setSelectedPracticeAreas(prev => {
+      const newSelection = [...prev[language]];
+      const index = newSelection.indexOf(value);
+      
+      if (index > -1) {
+        newSelection.splice(index, 1);
+      } else {
+        newSelection.push(value);
       }
-    } else {
-      if (locations_ta.length > 1) {
-        setLocations_ta(locations_ta.filter((_, i) => i !== index));
+      
+      return {
+        ...prev,
+        [language]: newSelection
+      };
+    });
+  }
+
+  // Location Selection Handlers
+  const handleLocationChange = (language, value) => {
+    setSelectedLocations(prev => {
+      const newSelection = [...prev[language]];
+      const index = newSelection.indexOf(value);
+      
+      if (index > -1) {
+        newSelection.splice(index, 1);
+      } else {
+        newSelection.push(value);
       }
-    }
+      
+      return {
+        ...prev,
+        [language]: newSelection
+      };
+    });
   }
 
-  const handleLocationChange = (index, value, language) => {
-    if (language === 'en') {
-      const newLocations = [...locations_en];
-      newLocations[index] = value;
-      setLocations_en(newLocations);
-    } else {
-      const newLocations = [...locations_ta];
-      newLocations[index] = value;
-      setLocations_ta(newLocations);
-    }
-  }
-
-  const addPracticeArea = (language) => {
-    if (language === 'en') {
-      setPracticeAreas_en([...practiceAreas_en, '']);
-    } else {
-      setPracticeAreas_ta([...practiceAreas_ta, '']);
-    }
-  }
-
-  const removePracticeArea = (index, language) => {
-    if (language === 'en') {
-      if (practiceAreas_en.length > 1) {
-        setPracticeAreas_en(practiceAreas_en.filter((_, i) => i !== index));
-      }
-    } else {
-      if (practiceAreas_ta.length > 1) {
-        setPracticeAreas_ta(practiceAreas_ta.filter((_, i) => i !== index));
-      }
-    }
-  }
-
-  const handlePracticeAreaChange = (index, value, language) => {
-    if (language === 'en') {
-      const newPracticeAreas = [...practiceAreas_en];
-      newPracticeAreas[index] = value;
-      setPracticeAreas_en(newPracticeAreas);
-    } else {
-      const newPracticeAreas = [...practiceAreas_ta];
-      newPracticeAreas[index] = value;
-      setPracticeAreas_ta(newPracticeAreas);
-    }
-  }
-
+  // Education and Address Handlers
   const addEducation = (language) => {
     if (language === 'en') {
       setEducation_en([...education_en, '']);
-    } else {
       setEducation_ta([...education_ta, '']);
+      setEducation_si([...education_si, '']);
+    } else if (language === 'ta') {
+      setEducation_ta([...education_ta, '']);
+    } else {
+      setEducation_si([...education_si, '']);
     }
   }
 
@@ -194,10 +221,16 @@ const EditLawyerPage = ({ params }) => {
     if (language === 'en') {
       if (education_en.length > 1) {
         setEducation_en(education_en.filter((_, i) => i !== index));
+        setEducation_ta(education_ta.filter((_, i) => i !== index));
+        setEducation_si(education_si.filter((_, i) => i !== index));
       }
-    } else {
+    } else if (language === 'ta') {
       if (education_ta.length > 1) {
         setEducation_ta(education_ta.filter((_, i) => i !== index));
+      }
+    } else {
+      if (education_si.length > 1) {
+        setEducation_si(education_si.filter((_, i) => i !== index));
       }
     }
   }
@@ -207,18 +240,26 @@ const EditLawyerPage = ({ params }) => {
       const newEducation = [...education_en];
       newEducation[index] = value;
       setEducation_en(newEducation);
-    } else {
+    } else if (language === 'ta') {
       const newEducation = [...education_ta];
       newEducation[index] = value;
       setEducation_ta(newEducation);
+    } else {
+      const newEducation = [...education_si];
+      newEducation[index] = value;
+      setEducation_si(newEducation);
     }
   }
 
   const addAddress = (language) => {
     if (language === 'en') {
       setAddresses_en([...addresses_en, '']);
-    } else {
       setAddresses_ta([...addresses_ta, '']);
+      setAddresses_si([...addresses_si, '']);
+    } else if (language === 'ta') {
+      setAddresses_ta([...addresses_ta, '']);
+    } else {
+      setAddresses_si([...addresses_si, '']);
     }
   }
 
@@ -226,10 +267,16 @@ const EditLawyerPage = ({ params }) => {
     if (language === 'en') {
       if (addresses_en.length > 1) {
         setAddresses_en(addresses_en.filter((_, i) => i !== index));
+        setAddresses_ta(addresses_ta.filter((_, i) => i !== index));
+        setAddresses_si(addresses_si.filter((_, i) => i !== index));
       }
-    } else {
+    } else if (language === 'ta') {
       if (addresses_ta.length > 1) {
         setAddresses_ta(addresses_ta.filter((_, i) => i !== index));
+      }
+    } else {
+      if (addresses_si.length > 1) {
+        setAddresses_si(addresses_si.filter((_, i) => i !== index));
       }
     }
   }
@@ -239,10 +286,14 @@ const EditLawyerPage = ({ params }) => {
       const newAddresses = [...addresses_en];
       newAddresses[index] = value;
       setAddresses_en(newAddresses);
-    } else {
+    } else if (language === 'ta') {
       const newAddresses = [...addresses_ta];
       newAddresses[index] = value;
       setAddresses_ta(newAddresses);
+    } else {
+      const newAddresses = [...addresses_si];
+      newAddresses[index] = value;
+      setAddresses_si(newAddresses);
     }
   }
 
@@ -258,50 +309,68 @@ const EditLawyerPage = ({ params }) => {
       formData.append('name_ta', data.name_ta || '');
       formData.append('title_ta', data.title_ta || '');
       formData.append('description_ta', data.description_ta || '');
+      formData.append('name_si', data.name_si || '');
+      formData.append('title_si', data.title_si || '');
+      formData.append('description_si', data.description_si || '');
       formData.append('contactNumber', data.contactNumber);
       formData.append('email', data.email);
       formData.append('website', data.website || '');
       formData.append('isFeatured', data.isFeatured);
       formData.append('isPublished', data.isPublished);
       
-      // Send arrays as individual entries
-      locations_en.forEach(location => {
-        if (location) formData.append('locations_en', location);
+      // Add practice areas for each language
+      selectedPracticeAreas.en.forEach(area => {
+        formData.append('practiceAreas_en', area);
+      });
+      selectedPracticeAreas.ta.forEach(area => {
+        formData.append('practiceAreas_ta', area);
+      });
+      selectedPracticeAreas.si.forEach(area => {
+        formData.append('practiceAreas_si', area);
       });
       
-      locations_ta.forEach(location => {
-        if (location) formData.append('locations_ta', location);
+      // Add locations for each language
+      selectedLocations.en.forEach(location => {
+        formData.append('locations_en', location);
+      });
+      selectedLocations.ta.forEach(location => {
+        formData.append('locations_ta', location);
+      });
+      selectedLocations.si.forEach(location => {
+        formData.append('locations_si', location);
       });
       
-      practiceAreas_en.forEach(area => {
-        if (area) formData.append('practiceAreas_en', area);
-      });
-      
-      practiceAreas_ta.forEach(area => {
-        if (area) formData.append('practiceAreas_ta', area);
-      });
-      
+      // Add education
       education_en.forEach(edu => {
         if (edu) formData.append('education_en', edu);
       });
-      
       education_ta.forEach(edu => {
         if (edu) formData.append('education_ta', edu);
       });
+      education_si.forEach(edu => {
+        if (edu) formData.append('education_si', edu);
+      });
       
+      // Add addresses
       addresses_en.forEach(addr => {
         if (addr) formData.append('addresses_en', addr);
       });
-      
       addresses_ta.forEach(addr => {
         if (addr) formData.append('addresses_ta', addr);
+      });
+      addresses_si.forEach(addr => {
+        if (addr) formData.append('addresses_si', addr);
       });
       
       if (image) {
         formData.append('image', image);
       }
 
-      const response = await axios.put(`/api/lawyers?id=${id}`, formData);
+      const response = await axios.put(`/api/lawyers?id=${id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       
       if (response.data.success) {
         toast.success(response.data.msg);
@@ -337,28 +406,20 @@ const EditLawyerPage = ({ params }) => {
             {/* Language Tabs */}
             <div className="border-b border-gray-200">
               <nav className="-mb-px flex space-x-8">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('en')}
-                  className={`py-4 px-1 text-sm font-medium border-b-2 whitespace-nowrap ${
-                    activeTab === 'en'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  {t('English Content')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('ta')}
-                  className={`py-4 px-1 text-sm font-medium border-b-2 whitespace-nowrap ${
-                    activeTab === 'ta'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  {t('Tamil Content')}
-                </button>
+                {['en', 'ta', 'si'].map((lang) => (
+                  <button
+                    key={lang}
+                    type="button"
+                    onClick={() => setActiveTab(lang)}
+                    className={`py-4 px-1 text-sm font-medium border-b-2 whitespace-nowrap ${
+                      activeTab === lang
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    {lang === 'en' ? 'English' : lang === 'ta' ? 'Tamil' : 'Sinhala'} Content
+                  </button>
+                ))}
               </nav>
             </div>
             
@@ -457,372 +518,180 @@ const EditLawyerPage = ({ params }) => {
               </div>
             </div>
             
-            {/* English Content */}
-            {activeTab === 'en' && (
-              <div className="space-y-6">
-                <div>
-                  <label htmlFor="name_en" className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('Lawyer Name')} *
-                  </label>
-                  <input
-                    id="name_en"
-                    name="name_en"
-                    value={data.name_en}
-                    onChange={onChangeHandler}
-                    className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                    placeholder={t('Enter lawyer name')}
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="title_en" className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('Lawyer Title')} *
-                  </label>
-                  <input
-                    id="title_en"
-                    name="title_en"
-                    value={data.title_en}
-                    onChange={onChangeHandler}
-                    className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                    placeholder={t('Enter lawyer title')}
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="description_en" className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('Lawyer Description')} *
-                  </label>
-                  <textarea
-                    id="description_en"
-                    name="description_en"
-                    value={data.description_en}
-                    onChange={onChangeHandler}
-                    rows={4}
-                    className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                    placeholder={t('Enter lawyer description')}
-                    required
-                  />
-                </div>
-                
-                {/* Locations */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('Locations')} *
-                    <button 
-                      type="button" 
-                      onClick={() => addLocation('en')}
-                      className="ml-2 text-xs text-blue-600 hover:text-blue-800"
-                    >
-                      + {t('Add Another')}
-                    </button>
-                  </label>
-                  {locations_en.map((location, index) => (
-                    <div key={index} className="flex items-center mb-2">
-                      <input
-                        value={location}
-                        onChange={(e) => handleLocationChange(index, e.target.value, 'en')}
-                        className="block flex-1 px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        placeholder={t('Enter location')}
-                        required
-                      />
-                      {locations_en.length > 1 && (
-                        <button 
-                          type="button" 
-                          onClick={() => removeLocation(index, 'en')}
-                          className="ml-2 text-red-600 hover:text-red-800 p-2"
-                        >
-                          ×
-                        </button>
-                      )}
+            {/* Content Tabs */}
+            {['en', 'ta', 'si'].map((lang) => (
+              activeTab === lang && (
+                <div key={lang} className="space-y-6">
+                  <div>
+                    <label htmlFor={`name_${lang}`} className="block text-sm font-medium text-gray-700 mb-2">
+                      {t('Lawyer Name')} {lang !== 'en' && `(${lang === 'ta' ? 'Tamil' : 'Sinhala'})`} {lang === 'en' && '*'}
+                    </label>
+                    <input
+                      id={`name_${lang}`}
+                      name={`name_${lang}`}
+                      value={data[`name_${lang}`]}
+                      onChange={onChangeHandler}
+                      className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                      placeholder={t('Enter lawyer name')}
+                      required={lang === 'en'}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor={`title_${lang}`} className="block text-sm font-medium text-gray-700 mb-2">
+                      {t('Lawyer Title')} {lang !== 'en' && `(${lang === 'ta' ? 'Tamil' : 'Sinhala'})`} {lang === 'en' && '*'}
+                    </label>
+                    <input
+                      id={`title_${lang}`}
+                      name={`title_${lang}`}
+                      value={data[`title_${lang}`]}
+                      onChange={onChangeHandler}
+                      className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                      placeholder={t('Enter lawyer title')}
+                      required={lang === 'en'}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor={`description_${lang}`} className="block text-sm font-medium text-gray-700 mb-2">
+                      {t('Lawyer Description')} {lang !== 'en' && `(${lang === 'ta' ? 'Tamil' : 'Sinhala'})`} {lang === 'en' && '*'}
+                    </label>
+                    <textarea
+                      id={`description_${lang}`}
+                      name={`description_${lang}`}
+                      value={data[`description_${lang}`]}
+                      onChange={onChangeHandler}
+                      rows={4}
+                      className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                      placeholder={t('Enter lawyer description')}
+                      required={lang === 'en'}
+                    />
+                  </div>
+                  
+                  {/* Practice Areas Multi-select */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {t('Practice Areas')} {lang !== 'en' && `(${lang === 'ta' ? 'Tamil' : 'Sinhala'})`} {lang === 'en' && '*'}
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {practiceAreaOptions.map((option, index) => (
+                        <label key={index} className="flex items-center p-3 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedPracticeAreas[lang].includes(option[lang])}
+                            onChange={() => handlePracticeAreaChange(lang, option[lang])}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          <span className="ml-3 text-sm text-gray-700">{option[lang]}</span>
+                        </label>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                
-                {/* Practice Areas */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('Practice Areas')} *
-                    <button 
-                      type="button" 
-                      onClick={() => addPracticeArea('en')}
-                      className="ml-2 text-xs text-blue-600 hover:text-blue-800"
-                    >
-                      + {t('Add Another')}
-                    </button>
-                  </label>
-                  {practiceAreas_en.map((area, index) => (
-                    <div key={index} className="flex items-center mb-2">
-                      <input
-                        value={area}
-                        onChange={(e) => handlePracticeAreaChange(index, e.target.value, 'en')}
-                        className="block flex-1 px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        placeholder={t('Enter practice area')}
-                        required
-                      />
-                      {practiceAreas_en.length > 1 && (
-                        <button 
-                          type="button" 
-                          onClick={() => removePracticeArea(index, 'en')}
-                          className="ml-2 text-red-600 hover:text-red-800 p-2"
-                        >
-                          ×
-                        </button>
-                      )}
+                  </div>
+                  
+                  {/* Locations Multi-select */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {t('Locations')} {lang !== 'en' && `(${lang === 'ta' ? 'Tamil' : 'Sinhala'})`} {lang === 'en' && '*'}
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {locationOptions.map((option, index) => (
+                        <label key={index} className="flex items-center p-3 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedLocations[lang].includes(option[lang])}
+                            onChange={() => handleLocationChange(lang, option[lang])}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          <span className="ml-3 text-sm text-gray-700">{option[lang]}</span>
+                        </label>
+                      ))}
                     </div>
-                  ))}
+                  </div>
+                  
+                  {/* Education */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {t('Education')} {lang !== 'en' && `(${lang === 'ta' ? 'Tamil' : 'Sinhala'})`} {lang === 'en' && '*'}
+                      <button 
+                        type="button" 
+                        onClick={() => addEducation(lang)}
+                        className="ml-2 text-xs text-blue-600 hover:text-blue-800"
+                      >
+                        + {t('Add Another')}
+                      </button>
+                    </label>
+                    {(
+                      lang === 'en' ? education_en : 
+                      lang === 'ta' ? education_ta : education_si
+                    ).map((edu, index) => (
+                      <div key={index} className="flex items-center mb-2">
+                        <input
+                          value={edu}
+                          onChange={(e) => handleEducationChange(index, e.target.value, lang)}
+                          className="block flex-1 px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                          placeholder={t('Enter education details')}
+                          required={lang === 'en'}
+                        />
+                        {(
+                          lang === 'en' ? education_en.length > 1 :
+                          lang === 'ta' ? education_ta.length > 1 :
+                          education_si.length > 1
+                        ) && (
+                          <button 
+                            type="button" 
+                            onClick={() => removeEducation(index, lang)}
+                            className="ml-2 text-red-600 hover:text-red-800 p-2"
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Addresses */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {t('Address')} {lang !== 'en' && `(${lang === 'ta' ? 'Tamil' : 'Sinhala'})`} {lang === 'en' && '*'}
+                      <button 
+                        type="button" 
+                        onClick={() => addAddress(lang)}
+                        className="ml-2 text-xs text-blue-600 hover:text-blue-800"
+                      >
+                        + {t('Add Another')}
+                      </button>
+                    </label>
+                    {(
+                      lang === 'en' ? addresses_en : 
+                      lang === 'ta' ? addresses_ta : addresses_si
+                    ).map((addr, index) => (
+                      <div key={index} className="flex items-center mb-2">
+                        <input
+                          value={addr}
+                          onChange={(e) => handleAddressChange(index, e.target.value, lang)}
+                          className="block flex-1 px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                          placeholder={t('Enter address')}
+                          required={lang === 'en'}
+                        />
+                        {(
+                          lang === 'en' ? addresses_en.length > 1 :
+                          lang === 'ta' ? addresses_ta.length > 1 :
+                          addresses_si.length > 1
+                        ) && (
+                          <button 
+                            type="button" 
+                            onClick={() => removeAddress(index, lang)}
+                            className="ml-2 text-red-600 hover:text-red-800 p-2"
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                
-                {/* Education */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('Education')} *
-                    <button 
-                      type="button" 
-                      onClick={() => addEducation('en')}
-                      className="ml-2 text-xs text-blue-600 hover:text-blue-800"
-                    >
-                      + {t('Add Another')}
-                    </button>
-                  </label>
-                  {education_en.map((edu, index) => (
-                    <div key={index} className="flex items-center mb-2">
-                      <input
-                        value={edu}
-                        onChange={(e) => handleEducationChange(index, e.target.value, 'en')}
-                        className="block flex-1 px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        placeholder={t('Enter education details')}
-                        required
-                      />
-                      {education_en.length > 1 && (
-                        <button 
-                          type="button" 
-                          onClick={() => removeEducation(index, 'en')}
-                          className="ml-2 text-red-600 hover:text-red-800 p-2"
-                        >
-                          ×
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Addresses */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('Address')} *
-                    <button 
-                      type="button" 
-                      onClick={() => addAddress('en')}
-                      className="ml-2 text-xs text-blue-600 hover:text-blue-800"
-                    >
-                      + {t('Add Another')}
-                    </button>
-                  </label>
-                  {addresses_en.map((addr, index) => (
-                    <div key={index} className="flex items-center mb-2">
-                      <input
-                        value={addr}
-                        onChange={(e) => handleAddressChange(index, e.target.value, 'en')}
-                        className="block flex-1 px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        placeholder={t('Enter address')}
-                        required
-                      />
-                      {addresses_en.length > 1 && (
-                        <button 
-                          type="button" 
-                          onClick={() => removeAddress(index, 'en')}
-                          className="ml-2 text-red-600 hover:text-red-800 p-2"
-                        >
-                          ×
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {/* Tamil Content */}
-            {activeTab === 'ta' && (
-              <div className="space-y-6">
-                <div>
-                  <label htmlFor="name_ta" className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('Lawyer Name')} (Tamil)
-                  </label>
-                  <input
-                    id="name_ta"
-                    name="name_ta"
-                    value={data.name_ta}
-                    onChange={onChangeHandler}
-                    className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                    placeholder={t('Enter lawyer name')}
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="title_ta" className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('Lawyer Title')} (Tamil)
-                  </label>
-                  <input
-                    id="title_ta"
-                    name="title_ta"
-                    value={data.title_ta}
-                    onChange={onChangeHandler}
-                    className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                    placeholder={t('Enter lawyer title')}
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="description_ta" className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('Lawyer Description')} (Tamil)
-                  </label>
-                  <textarea
-                    id="description_ta"
-                    name="description_ta"
-                    value={data.description_ta}
-                    onChange={onChangeHandler}
-                    rows={4}
-                    className="block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                    placeholder={t('Enter lawyer description')}
-                  />
-                </div>
-                
-                {/* Tamil Locations */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('Locations')} (Tamil)
-                    <button 
-                      type="button" 
-                      onClick={() => addLocation('ta')}
-                      className="ml-2 text-xs text-blue-600 hover:text-blue-800"
-                    >
-                      + {t('Add Another')}
-                    </button>
-                  </label>
-                  {locations_ta.map((location, index) => (
-                    <div key={index} className="flex items-center mb-2">
-                      <input
-                        value={location}
-                        onChange={(e) => handleLocationChange(index, e.target.value, 'ta')}
-                        className="block flex-1 px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        placeholder={t('Enter location')}
-                      />
-                      {locations_ta.length > 1 && (
-                        <button 
-                          type="button" 
-                          onClick={() => removeLocation(index, 'ta')}
-                          className="ml-2 text-red-600 hover:text-red-800 p-2"
-                        >
-                          ×
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Tamil Practice Areas */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('Practice Areas')} (Tamil)
-                    <button 
-                      type="button" 
-                      onClick={() => addPracticeArea('ta')}
-                      className="ml-2 text-xs text-blue-600 hover:text-blue-800"
-                    >
-                      + {t('Add Another')}
-                    </button>
-                  </label>
-                  {practiceAreas_ta.map((area, index) => (
-                    <div key={index} className="flex items-center mb-2">
-                      <input
-                        value={area}
-                        onChange={(e) => handlePracticeAreaChange(index, e.target.value, 'ta')}
-                        className="block flex-1 px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        placeholder={t('Enter practice area')}
-                      />
-                      {practiceAreas_ta.length > 1 && (
-                        <button 
-                          type="button" 
-                          onClick={() => removePracticeArea(index, 'ta')}
-                          className="ml-2 text-red-600 hover:text-red-800 p-2"
-                        >
-                          ×
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Tamil Education */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('Education')} (Tamil)
-                    <button 
-                      type="button" 
-                      onClick={() => addEducation('ta')}
-                      className="ml-2 text-xs text-blue-600 hover:text-blue-800"
-                    >
-                      + {t('Add Another')}
-                    </button>
-                  </label>
-                  {education_ta.map((edu, index) => (
-                    <div key={index} className="flex items-center mb-2">
-                      <input
-                        value={edu}
-                        onChange={(e) => handleEducationChange(index, e.target.value, 'ta')}
-                        className="block flex-1 px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        placeholder={t('Enter education details')}
-                      />
-                      {education_ta.length > 1 && (
-                        <button 
-                          type="button" 
-                          onClick={() => removeEducation(index, 'ta')}
-                          className="ml-2 text-red-600 hover:text-red-800 p-2"
-                        >
-                          ×
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Tamil Addresses */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('Address')} (Tamil)
-                    <button 
-                      type="button" 
-                      onClick={() => addAddress('ta')}
-                      className="ml-2 text-xs text-blue-600 hover:text-blue-800"
-                    >
-                      + {t('Add Another')}
-                    </button>
-                  </label>
-                  {addresses_ta.map((addr, index) => (
-                    <div key={index} className="flex items-center mb-2">
-                      <input
-                        value={addr}
-                        onChange={(e) => handleAddressChange(index, e.target.value, 'ta')}
-                        className="block flex-1 px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        placeholder={t('Enter address')}
-                      />
-                      {addresses_ta.length > 1 && (
-                        <button 
-                          type="button" 
-                          onClick={() => removeAddress(index, 'ta')}
-                          className="ml-2 text-red-600 hover:text-red-800 p-2"
-                        >
-                          ×
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+              )
+            ))}
             
             {/* Toggles */}
             <div className="flex space-x-6">

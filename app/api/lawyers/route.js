@@ -34,9 +34,10 @@ export async function GET(request) {
         );
       }
       
-      // Extract content for response
+      // Extract content for all languages for admin response
       const englishContent = lawyer.contents.find(c => c.language === 'en') || lawyer.contents[0];
       const tamilContent = lawyer.contents.find(c => c.language === 'ta');
+      const sinhalaContent = lawyer.contents.find(c => c.language === 'si');
       
       const lawyerResponse = {
         _id: lawyer._id,
@@ -47,14 +48,21 @@ export async function GET(request) {
         name_ta: tamilContent?.name || "",
         title_ta: tamilContent?.title || "",
         description_ta: tamilContent?.description || "",
+        name_si: sinhalaContent?.name || "",
+        title_si: sinhalaContent?.title || "",
+        description_si: sinhalaContent?.description || "",
         locations_en: lawyer.locations.filter(l => l.language === 'en').map(l => l.location),
         locations_ta: lawyer.locations.filter(l => l.language === 'ta').map(l => l.location),
+        locations_si: lawyer.locations.filter(l => l.language === 'si').map(l => l.location),
         practiceAreas_en: lawyer.practiceAreas.filter(p => p.language === 'en').map(p => p.practiceArea),
         practiceAreas_ta: lawyer.practiceAreas.filter(p => p.language === 'ta').map(p => p.practiceArea),
+        practiceAreas_si: lawyer.practiceAreas.filter(p => p.language === 'si').map(p => p.practiceArea),
         education_en: lawyer.education.filter(e => e.language === 'en').map(e => e.education),
         education_ta: lawyer.education.filter(e => e.language === 'ta').map(e => e.education),
+        education_si: lawyer.education.filter(e => e.language === 'si').map(e => e.education),
         addresses_en: lawyer.addresses.filter(a => a.language === 'en').map(a => a.address),
         addresses_ta: lawyer.addresses.filter(a => a.language === 'ta').map(a => a.address),
+        addresses_si: lawyer.addresses.filter(a => a.language === 'si').map(a => a.address),
         contactNumber: lawyer.contactNumber,
         email: lawyer.email,
         website: lawyer.website,
@@ -194,7 +202,7 @@ export async function GET(request) {
   }
 }
 
-// POST - Create new lawyer (keep as is)
+// POST - Create new lawyer with Sinhala support
 export async function POST(request) {
   try {
     await connectToDB();
@@ -209,6 +217,9 @@ export async function POST(request) {
     const name_ta = formData.get('name_ta');
     const title_ta = formData.get('title_ta');
     const description_ta = formData.get('description_ta');
+    const name_si = formData.get('name_si');
+    const title_si = formData.get('title_si');
+    const description_si = formData.get('description_si');
     const contactNumber = formData.get('contactNumber');
     const email = formData.get('email');
     const website = formData.get('website');
@@ -224,15 +235,19 @@ export async function POST(request) {
       );
     }
 
-    // Get all array values
+    // Get all array values for all languages
     const locations_en = formData.getAll('locations_en').filter(loc => loc && loc.trim());
     const locations_ta = formData.getAll('locations_ta').filter(loc => loc && loc.trim());
+    const locations_si = formData.getAll('locations_si').filter(loc => loc && loc.trim());
     const practiceAreas_en = formData.getAll('practiceAreas_en').filter(area => area && area.trim());
     const practiceAreas_ta = formData.getAll('practiceAreas_ta').filter(area => area && area.trim());
+    const practiceAreas_si = formData.getAll('practiceAreas_si').filter(area => area && area.trim());
     const education_en = formData.getAll('education_en').filter(edu => edu && edu.trim());
     const education_ta = formData.getAll('education_ta').filter(edu => edu && edu.trim());
+    const education_si = formData.getAll('education_si').filter(edu => edu && edu.trim());
     const addresses_en = formData.getAll('addresses_en').filter(addr => addr && addr.trim());
     const addresses_ta = formData.getAll('addresses_ta').filter(addr => addr && addr.trim());
+    const addresses_si = formData.getAll('addresses_si').filter(addr => addr && addr.trim());
 
     // Generate slug
     const slug = `${name_en.toLowerCase().replace(/\s+/g, '-')}-${title_en.toLowerCase().replace(/\s+/g, '-')}`;
@@ -277,6 +292,15 @@ export async function POST(request) {
       });
     }
 
+    if (name_si && title_si && description_si) {
+      contents.push({
+        language: 'si',
+        name: name_si,
+        title: title_si,
+        description: description_si
+      });
+    }
+
     // Prepare multilingual locations
     const locations = [];
     locations_en.forEach((location, index) => {
@@ -291,6 +315,14 @@ export async function POST(request) {
           locations.push({
             language: 'ta',
             location: locations_ta[index]
+          });
+        }
+        
+        // Add Sinhala location if available at same index
+        if (locations_si[index] && locations_si[index].trim()) {
+          locations.push({
+            language: 'si',
+            location: locations_si[index]
           });
         }
       }
@@ -312,6 +344,14 @@ export async function POST(request) {
             practiceArea: practiceAreas_ta[index]
           });
         }
+        
+        // Add Sinhala practice area if available at same index
+        if (practiceAreas_si[index] && practiceAreas_si[index].trim()) {
+          practiceAreas.push({
+            language: 'si',
+            practiceArea: practiceAreas_si[index]
+          });
+        }
       }
     });
 
@@ -331,6 +371,14 @@ export async function POST(request) {
             education: education_ta[index]
           });
         }
+        
+        // Add Sinhala education if available at same index
+        if (education_si[index] && education_si[index].trim()) {
+          education.push({
+            language: 'si',
+            education: education_si[index]
+          });
+        }
       }
     });
 
@@ -348,6 +396,14 @@ export async function POST(request) {
           addresses.push({
             language: 'ta',
             address: addresses_ta[index]
+          });
+        }
+        
+        // Add Sinhala address if available at same index
+        if (addresses_si[index] && addresses_si[index].trim()) {
+          addresses.push({
+            language: 'si',
+            address: addresses_si[index]
           });
         }
       }
@@ -388,7 +444,7 @@ export async function POST(request) {
   }
 }
 
-// PUT - Update lawyer (keep as is)
+// PUT - Update lawyer with Sinhala support
 export async function PUT(request) {
   try {
     await connectToDB();
@@ -405,25 +461,32 @@ export async function PUT(request) {
 
     const formData = await request.formData();
     
-    // Get all form data
+    // Get all form data for all languages
     const name_en = formData.get('name_en');
     const title_en = formData.get('title_en');
     const description_en = formData.get('description_en');
     const name_ta = formData.get('name_ta');
     const title_ta = formData.get('title_ta');
     const description_ta = formData.get('description_ta');
+    const name_si = formData.get('name_si');
+    const title_si = formData.get('title_si');
+    const description_si = formData.get('description_si');
     
     const locations_en = formData.getAll('locations_en').filter(loc => loc && loc.trim());
     const locations_ta = formData.getAll('locations_ta').filter(loc => loc && loc.trim());
+    const locations_si = formData.getAll('locations_si').filter(loc => loc && loc.trim());
     
     const practiceAreas_en = formData.getAll('practiceAreas_en').filter(area => area && area.trim());
     const practiceAreas_ta = formData.getAll('practiceAreas_ta').filter(area => area && area.trim());
+    const practiceAreas_si = formData.getAll('practiceAreas_si').filter(area => area && area.trim());
     
     const education_en = formData.getAll('education_en').filter(edu => edu && edu.trim());
     const education_ta = formData.getAll('education_ta').filter(edu => edu && edu.trim());
+    const education_si = formData.getAll('education_si').filter(edu => edu && edu.trim());
     
     const addresses_en = formData.getAll('addresses_en').filter(addr => addr && addr.trim());
     const addresses_ta = formData.getAll('addresses_ta').filter(addr => addr && addr.trim());
+    const addresses_si = formData.getAll('addresses_si').filter(addr => addr && addr.trim());
     
     const contactNumber = formData.get('contactNumber');
     const email = formData.get('email');
@@ -502,8 +565,24 @@ export async function PUT(request) {
       }
     }
 
+    if (name_si || title_si || description_si) {
+      updateData.contents = updateData.contents || [...existingLawyer.contents];
+      
+      // Remove existing Sinhala content if it exists
+      updateData.contents = updateData.contents.filter(c => c.language !== 'si');
+      
+      if (name_si || title_si || description_si) {
+        updateData.contents.push({
+          language: 'si',
+          name: name_si || existingLawyer.contents.find(c => c.language === 'si')?.name || '',
+          title: title_si || existingLawyer.contents.find(c => c.language === 'si')?.title || '',
+          description: description_si || existingLawyer.contents.find(c => c.language === 'si')?.description || ''
+        });
+      }
+    }
+
     // Update multilingual locations - FIXED: Replace arrays instead of pushing
-    if (locations_en.length > 0 || locations_ta.length > 0) {
+    if (locations_en.length > 0 || locations_ta.length > 0 || locations_si.length > 0) {
       updateData.locations = [];
       
       // Add English locations
@@ -525,10 +604,20 @@ export async function PUT(request) {
           });
         }
       });
+
+      // Add Sinhala locations
+      locations_si.forEach(location => {
+        if (location) {
+          updateData.locations.push({
+            language: 'si',
+            location: location
+          });
+        }
+      });
     }
 
     // Update multilingual practice areas - FIXED: Replace arrays instead of pushing
-    if (practiceAreas_en.length > 0 || practiceAreas_ta.length > 0) {
+    if (practiceAreas_en.length > 0 || practiceAreas_ta.length > 0 || practiceAreas_si.length > 0) {
       updateData.practiceAreas = [];
       
       // Add English practice areas
@@ -550,10 +639,20 @@ export async function PUT(request) {
           });
         }
       });
+
+      // Add Sinhala practice areas
+      practiceAreas_si.forEach(area => {
+        if (area) {
+          updateData.practiceAreas.push({
+            language: 'si',
+            practiceArea: area
+          });
+        }
+      });
     }
 
     // Update multilingual education - FIXED: Replace arrays instead of pushing
-    if (education_en.length > 0 || education_ta.length > 0) {
+    if (education_en.length > 0 || education_ta.length > 0 || education_si.length > 0) {
       updateData.education = [];
       
       // Add English education
@@ -575,10 +674,20 @@ export async function PUT(request) {
           });
         }
       });
+
+      // Add Sinhala education
+      education_si.forEach(edu => {
+        if (edu) {
+          updateData.education.push({
+            language: 'si',
+            education: edu
+          });
+        }
+      });
     }
 
     // Update multilingual addresses - FIXED: Replace arrays instead of pushing
-    if (addresses_en.length > 0 || addresses_ta.length > 0) {
+    if (addresses_en.length > 0 || addresses_ta.length > 0 || addresses_si.length > 0) {
       updateData.addresses = [];
       
       // Add English addresses
@@ -596,6 +705,16 @@ export async function PUT(request) {
         if (addr) {
           updateData.addresses.push({
             language: 'ta',
+            address: addr
+          });
+        }
+      });
+
+      // Add Sinhala addresses
+      addresses_si.forEach(addr => {
+        if (addr) {
+          updateData.addresses.push({
+            language: 'si',
             address: addr
           });
         }
