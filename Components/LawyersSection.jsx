@@ -95,16 +95,16 @@ const LawyersSection = () => {
   const hasActiveFilters = searchTerm || locationFilter || practiceAreaFilter;
 
   if (loading) {
-    return (
-      <div className="py-20 bg-white">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-300 mx-auto"></div>
-            <p className="mt-4 text-gray-500">{t('Loading legal experts...')}</p>
-          </div>
-        </div>
+return (
+  <div className="py-20 bg-white">
+    <div className="max-w-6xl mx-auto px-4">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-300 mx-auto"></div>
+        <p className="mt-4 text-gray-500">Loading legal experts...</p>
       </div>
-    );
+    </div>
+  </div>
+);
   }
 
   return (
