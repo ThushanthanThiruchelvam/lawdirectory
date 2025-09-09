@@ -96,13 +96,6 @@ const LawyerProfilePage = () => {
               >
                 {t('Lawyers')}
               </Link>
-              {/* <Link 
-                href="/#blog" 
-                className={`font-medium ${menu === 'blog' ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'}`}
-                onClick={() => setMenu('blog')}
-              >
-                {t('Blog')}
-              </Link> */}
               <Link 
                 href="/#contact" 
                 className={`font-medium ${menu === 'contact' ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'}`}
@@ -143,11 +136,8 @@ const LawyerProfilePage = () => {
                 <Link href="/#about" className="font-medium text-gray-70 hover:text-blue-600 py-2">About</Link>
                 <Link href="/#services" className="font-medium text-gray-700 hover:text-blue-600 py-2">Services</Link>
                 <Link href="/#lawyers" className="font-medium text-gray-700 hover:text-blue-600 py-2">Lawyers</Link>
-                {/* <Link href="/#blog" className="font-medium text-gray-700 hover:text-blue-600 py-2">Blog</Link> */}
                 <Link href="/#contact" className="font-medium text-gray-700 hover:text-blue-600 py-2">Contact</Link>
-                {/* <button className="text-sm font-medium py-2 px-4 border border-gray-800 rounded hover:bg-gray-800 hover:text-white transition-colors mt-4">
-                  Get Started
-                </button> */}
+
               </div>
             </div>
           )}
@@ -208,13 +198,6 @@ const LawyerProfilePage = () => {
               >
                 {t('Lawyers')}
               </Link>
-              {/* <Link 
-                href="/#blog" 
-                className={`font-medium ${menu === 'blog' ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'}`}
-                onClick={() => setMenu('blog')}
-              >
-                {t('Blog')}
-              </Link> */}
               <Link 
                 href="/#contact" 
                 className={`font-medium ${menu === 'contact' ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'}`}
@@ -255,11 +238,7 @@ const LawyerProfilePage = () => {
                 <Link href="/#about" className="font-medium text-gray-700 hover:text-blue-600 py-2">About</Link>
                 <Link href="/#services" className="font-medium text-gray-700 hover:text-blue-600 py-2">Services</Link>
                 <Link href="/#lawyers" className="font-medium text-gray-700 hover:text-blue-600 py-2">Lawyers</Link>
-                {/* <Link href="/#blog" className="font-medium text-gray-700 hover:text-blue-600 py-2">Blog</Link> */}
                 <Link href="/#contact" className="font-medium text-gray-700 hover:text-blue-600 py-2">Contact</Link>
-                {/* <button className="text-sm font-medium py-2 px-4 border border-gray-800 rounded hover:bg-gray-800 hover:text-white transition-colors mt-4">
-                  Get Started
-                </button> */}
               </div>
             </div>
           )}
@@ -322,13 +301,6 @@ const LawyerProfilePage = () => {
             >
               {t('Lawyers')}
             </Link>
-            {/* <Link 
-              href="/#blog" 
-              className={`font-medium ${menu === 'blog' ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'}`}
-              onClick={() => setMenu('blog')}
-            >
-              {t('Blog')}
-            </Link> */}
             <Link 
               href="/#contact" 
               className={`font-medium ${menu === 'contact' ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'}`}
@@ -373,11 +345,7 @@ const LawyerProfilePage = () => {
               <Link href="/#about" className="font-medium text-gray-700 hover:text-blue-600 py-2">About</Link>
               <Link href="/#services" className="font-medium text-gray-700 hover:text-blue-600 py-2">Services</Link>
               <Link href="/#lawyers" className="font-medium text-gray-700 hover:text-blue-600 py-2">Lawyers</Link>
-              {/* <Link href="/#blog" className="font-medium text-gray-700 hover:text-blue-600 py-2">Blog</Link> */}
               <Link href="/#contact" className="font-medium text-gray-700 hover:text-blue-600 py-2">Contact</Link>
-              {/* <button className="text-sm font-medium py-2 px-4 border border-gray-800 rounded hover:bg-gray-800 hover:text-white transition-colors mt-4">
-                Get Started
-              </button> */}
             </div>
           </div>
         )}
@@ -496,26 +464,40 @@ const LawyerProfilePage = () => {
               </div>
             )}
             
-            {/* Contact Section */}
-            <div className="bg-gray-50 p-5 rounded-lg border border-gray-100">
-              <h3 className="text-base font-medium text-gray-900 mb-2">Contact Information</h3>
-              {lawyer.contactNumber && (
-                <p className="text-gray-600 text-sm mb-2">
-                  <span className="font-medium">Phone:</span> {lawyer.contactNumber}
-                </p>
-              )}
-              {lawyer.email && (
-                <p className="text-gray-600 text-sm mb-2">
-                  <span className="font-medium">Email:</span> {lawyer.email}
-                </p>
-              )}
-              {lawyer.website && (
-                <p className="text-gray-600 text-sm mb-2">
-                  <span className="font-medium">Website:</span> {lawyer.website}
-                </p>
-              )}
-              <p className="text-gray-600 text-sm">For inquiries or to schedule a consultation, please contact our office.</p>
-            </div>
+{/* Contact Section */}
+<div className="bg-gray-50 p-5 rounded-lg border border-gray-100">
+  <h3 className="text-base font-medium text-gray-900 mb-2">Contact Information</h3>
+  {lawyer.contactNumber && (
+    <p className="text-gray-600 text-sm mb-2">
+      <span className="font-medium">Phone:</span> {lawyer.contactNumber}
+    </p>
+  )}
+  {lawyer.email && (
+    <p className="text-gray-600 text-sm mb-2">
+      <span className="font-medium">Email:</span>{' '}
+      <a 
+        href={`mailto:${lawyer.email}`}
+        className="text-blue-600 hover:text-blue-800 hover:underline"
+      >
+        {lawyer.email}
+      </a>
+    </p>
+  )}
+  {lawyer.website && (
+    <p className="text-gray-600 text-sm mb-2">
+      <span className="font-medium">Website:</span>{' '}
+      <a 
+        href={lawyer.website.startsWith('http') ? lawyer.website : `https://${lawyer.website}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-600 hover:text-blue-800 hover:underline"
+      >
+        {lawyer.website}
+      </a>
+    </p>
+  )}
+  <p className="text-gray-600 text-sm">For inquiries or to schedule a consultation, please contact our office.</p>
+</div>
           </div>
         </div>
       </div>
