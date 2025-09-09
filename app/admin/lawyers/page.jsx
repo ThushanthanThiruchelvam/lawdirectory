@@ -1,4 +1,3 @@
-// app/admin/lawyers/page.jsx
 'use client'
 
 import axios from 'axios';
@@ -9,20 +8,42 @@ import Link from 'next/link';
 
 const Page = () => {
   const [lawyers, setLawyers] = useState([]);
+  const [filteredLawyers, setFilteredLawyers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalLawyers, setTotalLawyers] = useState(0);
-  const itemsPerPage = 10; // Number of items per page
-  
+  const [filters, setFilters] = useState({
+    practiceArea: '',
+    location: '',
+    status: 'all', // all, published, draft, featured
+    search: ''
+  });
+  const [allPracticeAreas, setAllPracticeAreas] = useState([]);
+  const [allLocations, setAllLocations] = useState([]);
+  const itemsPerPage = 10;
+
   const fetchLawyers = async (page = 1) => {
     try {
       setLoading(true);
       const response = await axios.get(`/api/lawyers?admin=true&page=${page}&limit=${itemsPerPage}`);
       setLawyers(response.data.lawyers);
+      setFilteredLawyers(response.data.lawyers);
       setTotalPages(response.data.totalPages);
       setTotalLawyers(response.data.totalLawyers);
       setCurrentPage(page);
+      
+      // Extract unique practice areas and locations
+      const practiceAreasSet = new Set();
+      const locationsSet = new Set();
+      
+      response.data.lawyers.forEach(lawyer => {
+        lawyer.practiceAreas?.forEach(area => practiceAreasSet.add(area));
+        lawyer.locations?.forEach(location => locationsSet.add(location));
+      });
+      
+      setAllPracticeAreas(Array.from(practiceAreasSet).sort());
+      setAllLocations(Array.from(locationsSet).sort());
     } catch (error) {
       console.error('Error fetching lawyers:', error);
       toast.error('Failed to fetch lawyers');
@@ -31,6 +52,72 @@ const Page = () => {
     }
   }
 
+  const applyFilters = () => {
+    let filtered = [...lawyers];
+
+    // Apply search filter
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase();
+      filtered = filtered.filter(lawyer =>
+        lawyer.name.toLowerCase().includes(searchTerm) ||
+        lawyer.title.toLowerCase().includes(searchTerm) ||
+        lawyer.lawyerId.toLowerCase().includes(searchTerm) ||
+        lawyer.practiceAreas?.some(area => area.toLowerCase().includes(searchTerm)) ||
+        lawyer.locations?.some(location => location.toLowerCase().includes(searchTerm))
+      );
+    }
+
+    // Apply practice area filter
+    if (filters.practiceArea) {
+      filtered = filtered.filter(lawyer =>
+        lawyer.practiceAreas?.includes(filters.practiceArea)
+      );
+    }
+
+    // Apply location filter
+    if (filters.location) {
+      filtered = filtered.filter(lawyer =>
+        lawyer.locations?.includes(filters.location)
+      );
+    }
+
+    // Apply status filter
+    if (filters.status !== 'all') {
+      switch (filters.status) {
+        case 'published':
+          filtered = filtered.filter(lawyer => lawyer.isPublished);
+          break;
+        case 'draft':
+          filtered = filtered.filter(lawyer => !lawyer.isPublished);
+          break;
+        case 'featured':
+          filtered = filtered.filter(lawyer => lawyer.isFeatured);
+          break;
+        default:
+          break;
+      }
+    }
+
+    setFilteredLawyers(filtered);
+  };
+
+  const handleFilterChange = (filterType, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      practiceArea: '',
+      location: '',
+      status: 'all',
+      search: ''
+    });
+    setFilteredLawyers(lawyers);
+  };
+
   const deleteLawyer = async (lawyerId) => {
     if (!window.confirm('Are you sure you want to delete this lawyer?')) return;
     
@@ -38,7 +125,7 @@ const Page = () => {
       const response = await axios.delete(`/api/lawyers?id=${lawyerId}`);
       if (response.data.success) {
         toast.success(response.data.msg);
-        fetchLawyers(currentPage); // Refresh the current page
+        fetchLawyers(currentPage);
       } else {
         toast.error(response.data.error);
       }
@@ -57,7 +144,7 @@ const Page = () => {
       
       if (response.data.success) {
         toast.success('Featured status updated');
-        fetchLawyers(currentPage); // Refresh the current page
+        fetchLawyers(currentPage);
       }
     } catch (error) {
       console.error('Error toggling featured status:', error);
@@ -74,7 +161,7 @@ const Page = () => {
       
       if (response.data.success) {
         toast.success('Published status updated');
-        fetchLawyers(currentPage); // Refresh the current page
+        fetchLawyers(currentPage);
       }
     } catch (error) {
       console.error('Error toggling published status:', error);
@@ -84,9 +171,12 @@ const Page = () => {
 
   useEffect(() => {
     fetchLawyers(1);
-  }, [])
+  }, []);
 
-  // Generate page numbers for pagination
+  useEffect(() => {
+    applyFilters();
+  }, [filters, lawyers]);
+
   const getPageNumbers = () => {
     const pages = [];
     const maxVisiblePages = 5;
@@ -94,7 +184,6 @@ const Page = () => {
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
     
-    // Adjust if we're near the beginning
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
@@ -124,7 +213,9 @@ const Page = () => {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Manage Lawyers</h1>
               <p className="text-sm text-gray-600 mt-1">
-                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalLawyers)} of {totalLawyers} lawyers
+                Showing {filteredLawyers.length} of {totalLawyers} lawyers
+                {filters.search || filters.practiceArea || filters.location || filters.status !== 'all' ? 
+                  ` (filtered)` : ''}
               </p>
             </div>
             <Link 
@@ -133,6 +224,90 @@ const Page = () => {
             >
               Add New Lawyer
             </Link>
+          </div>
+
+          {/* Filter Section */}
+          <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+              {/* Search Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Search
+                </label>
+                <input
+                  type="text"
+                  placeholder="Search lawyers..."
+                  value={filters.search}
+                  onChange={(e) => handleFilterChange('search', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Practice Area Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Practice Area
+                </label>
+                <select
+                  value={filters.practiceArea}
+                  onChange={(e) => handleFilterChange('practiceArea', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">All Practice Areas</option>
+                  {allPracticeAreas.map((area, index) => (
+                    <option key={index} value={area}>
+                      {area}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Location Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Location
+                </label>
+                <select
+                  value={filters.location}
+                  onChange={(e) => handleFilterChange('location', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">All Locations</option>
+                  {allLocations.map((location, index) => (
+                    <option key={index} value={location}>
+                      {location}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Status Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
+                <select
+                  value={filters.status}
+                  onChange={(e) => handleFilterChange('status', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All Status</option>
+                  <option value="published">Published</option>
+                  <option value="draft">Draft</option>
+                  <option value="featured">Featured</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Clear Filters Button */}
+            {(filters.search || filters.practiceArea || filters.location || filters.status !== 'all') && (
+              <button
+                onClick={clearFilters}
+                className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                Clear All Filters
+              </button>
+            )}
           </div>
           
           <div className="bg-white shadow-sm rounded-lg overflow-hidden">
@@ -161,7 +336,7 @@ const Page = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {lawyers.map((lawyer) => (
+                  {filteredLawyers.map((lawyer) => (
                     <tr key={lawyer._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
@@ -185,7 +360,6 @@ const Page = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex flex-col space-y-4">
-                          {/* Featured Toggle Switch */}
                           <label className="flex items-center cursor-pointer">
                             <div className="relative">
                               <input
@@ -206,7 +380,6 @@ const Page = () => {
                             </span>
                           </label>
                           
-                          {/* Published Toggle Switch */}
                           <label className="flex items-center cursor-pointer">
                             <div className="relative">
                               <input
@@ -249,9 +422,13 @@ const Page = () => {
                 </tbody>
               </table>
               
-              {lawyers.length === 0 && (
+              {filteredLawyers.length === 0 && (
                 <div className="text-center py-12 text-gray-500">
-                  No lawyers found. <Link href="/admin/add-lawyer" className="text-blue-600 hover:underline">Add your first lawyer</Link>.
+                  {lawyers.length === 0 ? (
+                    <>No lawyers found. <Link href="/admin/add-lawyer" className="text-blue-600 hover:underline">Add your first lawyer</Link>.</>
+                  ) : (
+                    'No lawyers match your filters. Try adjusting your search criteria.'
+                  )}
                 </div>
               )}
             </div>
