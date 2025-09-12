@@ -1,7 +1,6 @@
 'use client'
 
 import axios from 'axios'
-import Image from 'next/image'
 import React, { useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import ProtectedRoute from '/components/ProtectedRoute'
